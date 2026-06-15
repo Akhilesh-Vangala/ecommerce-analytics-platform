@@ -85,7 +85,7 @@ PostgreSQL 16, but the schema is designed to map directly onto a real Redshift c
 │   ├── data_quality/             # 39-check DQ suite
 │   └── analytics/                  # 27-query SQL catalog, 4 business domains
 ├── notebooks/                # 6 narrated Jupyter notebooks (EDA -> ML)
-├── dashboard/extracts/        # 24 CSV extracts feeding the Tableau workbook
+├── dashboard/extracts/        # 24 CSV extracts feeding the Tableau workbook (generated, gitignored)
 └── docs/
     └── CASE_STUDY.md         # problem -> approach -> findings -> recommendations
 ```
@@ -146,7 +146,7 @@ revenue & growth, customer RFM/cohorts, fulfillment & SLA, and seller marketplac
 6. Seller Marketplace
 7. Predictive Risk Scoring
 
-Built from the 24 CSVs in `dashboard/extracts/`.
+Built from 24 CSVs generated locally by `etl/export_dashboard_extracts.py` (step 6 above).
 
 ---
 

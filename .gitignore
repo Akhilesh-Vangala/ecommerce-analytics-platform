@@ -8,6 +8,9 @@ __pycache__/
 data/raw/*.csv
 data/processed/*.csv
 
+# Dashboard extracts are generated via etl/export_dashboard_extracts.py, not committed
+dashboard/extracts/*.csv
+
 .DS_Store
 
 # Personal working notes and generator scripts, not part of the published project

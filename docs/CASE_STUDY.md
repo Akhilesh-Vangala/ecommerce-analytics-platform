@@ -459,4 +459,3 @@ late-rate distribution shown on Page 4.
 
 - `notebooks/01_data_profiling_and_eda.ipynb` … `06_predictive_modeling.ipynb`
 - `etl/export_dashboard_extracts.py` — single source of truth for all 24 dashboard CSVs
-- `dashboard/extracts/` — the 24 CSVs themselves
