@@ -95,7 +95,8 @@ Customer Segments, Seller Performance.
 ## 8. Engineering hygiene
 
 - `.venv/` local virtualenv, `requirements.txt`
-- `config/` connection settings (local Postgres now, Redshift-ready)
+- `.env` / `.env.example` connection settings via `etl/db.py` (local Postgres now,
+  Redshift-ready — see `redshift/DEPLOYMENT.md`)
 - `etl/` idempotent Python load scripts with logging
 - git repo with incremental commits per layer/milestone
 
