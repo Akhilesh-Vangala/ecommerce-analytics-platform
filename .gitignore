@@ -9,3 +9,6 @@ data/raw/*.csv
 data/processed/*.csv
 
 .DS_Store
+
+# Personal working notes and generator scripts, not part of the published project
+local_reference/

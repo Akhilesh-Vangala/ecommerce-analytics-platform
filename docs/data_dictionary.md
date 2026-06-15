@@ -2,7 +2,7 @@
 
 **Project:** Olist Brazilian E-Commerce — End-to-End Retail & Fulfillment Analytics
 **Scope:** Every column in every table/file produced by this project — the raw layer, staging layer, marts (star schema), and the 24 Tableau dashboard extracts.
-**Companion docs:** `PROJECT_PLAN.md` (architecture & scope) · `docs/data_quality_report.md` (39-check DQ framework) · `docs/sql_query_catalog.md` (business question → query → answer) · `docs/dashboard_build_guide.md` (Tableau build spec) · `docs/CASE_STUDY.md` (findings & recommendations).
+**Companion docs:** `docs/data_quality_report.md` (39-check DQ framework) · `docs/sql_query_catalog.md` (business question → query → answer) · `docs/dashboard_build_guide.md` (Tableau build spec) · `docs/CASE_STUDY.md` (findings & recommendations).
 
 ---
 
@@ -17,7 +17,7 @@ raw  ─▶  staging  ─▶  marts (star schema)  ─▶  dashboard/extracts/*.
 - **raw** (`raw` schema, §1): pass-through of the 9 Olist Kaggle source CSVs, 1 table each, minimal typing. Preserves source fidelity for lineage/debugging.
 - **staging** (`staging` schema, §2): 1 model per raw source — type casts, trims/normalizes text, deduplicates, and surfaces `dq_*` data-quality flags. No cross-subject-area joins yet.
 - **marts** (`marts` schema, §3): star schema (5 dimensions + 3 facts), analysis-ready. This is the **single source of truth** for every SQL analytics query (`sql/analytics/*.sql`) and the basis for every dashboard extract.
-- **dashboard/extracts** (§5): 24 flat, pre-aggregated CSVs consumed directly by the 7-page Tableau Public workbook. All logic is ported from the validated `notebooks/_build_nb0*.py` pipelines (NB1–NB6) — the export script introduces **no new analytical methodology**, so dashboard numbers are guaranteed to reconcile with the notebook narrative and with `marts.*`.
+- **dashboard/extracts** (§5): 24 flat, pre-aggregated CSVs consumed directly by the 7-page Tableau Public workbook. All logic mirrors the validated analysis in `notebooks/01`–`06` — the export script introduces **no new analytical methodology**, so dashboard numbers are guaranteed to reconcile with the notebook narrative and with `marts.*`.
 
 ### 0.2 Source dataset
 
@@ -142,7 +142,7 @@ dim_geography (PK zip_code_prefix, 19,015 rows) — standalone; joined via
 *_zip_code_prefix for map/zip-level analysis independent of customer/seller role.
 ```
 
-**Redshift notes:** all 5 dimensions use `DISTSTYLE ALL` (broadcast to every node — every dim is <100K rows, so every fact↔dim join is local). `fact_orders` uses `DISTKEY(customer_unique_id)` (co-locates a customer's orders for RFM/cohort joins) and `SORTKEY(order_purchase_date)` (the dominant range-filter/group-by column across all analytics). `fact_order_items` / `fact_order_payments` use `DISTKEY(order_id)` and `SORTKEY(order_purchase_date)`. Full Redshift DDL variant: `redshift/DEPLOYMENT.md`.
+**Redshift notes:** all 5 dimensions use `DISTSTYLE ALL` (broadcast to every node — every dim is <100K rows, so every fact↔dim join is local). `fact_orders` uses `DISTKEY(customer_unique_id)` (co-locates a customer's orders for RFM/cohort joins) and `SORTKEY(order_purchase_date)` (the dominant range-filter/group-by column across all analytics). `fact_order_items` / `fact_order_payments` use `DISTKEY(order_id)` and `SORTKEY(order_purchase_date)`.
 
 ### 3.1 `dim_date` — 1,096 rows · PK `date_day` · 2016-01-01 to 2018-12-31
 

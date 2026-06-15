@@ -11,8 +11,7 @@ reproducible extracts.
 > **Why Olist, framed as Amazon?** Olist is a multi-seller marketplace where customers order
 > items from many 3rd-party sellers, items move through a logistics network against an
 > *estimated* delivery date, and customers leave a satisfaction score after delivery. That is
-> structurally the same shape as Amazon's Retail + Marketplace + Fulfillment businesses. See
-> [`docs/resume_bullets.md`](docs/resume_bullets.md) for the full positioning writeup.
+> structurally the same shape as Amazon's Retail + Marketplace + Fulfillment businesses.
 
 ---
 
@@ -65,9 +64,8 @@ data/raw/*.csv (Kaggle)
 ```
 
 Every SQL file is written in ANSI/Redshift-compatible SQL, with `DISTKEY`/`SORTKEY` choices
-documented inline as comments and a full deployment runbook in
-[`redshift/DEPLOYMENT.md`](redshift/DEPLOYMENT.md) — the project runs end-to-end on local
-PostgreSQL 16, but is designed to map directly onto a real Redshift cluster.
+documented inline as comments in `sql/marts/`. The project runs end-to-end on local
+PostgreSQL 16, but the schema is designed to map directly onto a real Redshift cluster.
 
 ---
 
@@ -75,7 +73,6 @@ PostgreSQL 16, but is designed to map directly onto a real Redshift cluster.
 
 ```
 .
-├── PROJECT_PLAN.md          # architecture & scope (the original design doc)
 ├── requirements.txt         # Python dependencies (.venv)
 ├── .env.example              # local Postgres connection template
 ├── data/
@@ -89,22 +86,19 @@ PostgreSQL 16, but is designed to map directly onto a real Redshift cluster.
 │   └── analytics/                  # 27-query SQL catalog, 4 business domains
 ├── notebooks/                # 6 narrated Jupyter notebooks (EDA -> ML)
 ├── dashboard/extracts/        # 24 CSV extracts feeding the Tableau workbook
-├── redshift/
-│   └── DEPLOYMENT.md          # optional real-Redshift deployment runbook
 └── docs/
     ├── CASE_STUDY.md            # problem -> approach -> findings -> recommendations
     ├── data_dictionary.md         # every column, every table/extract
     ├── data_quality_report.md      # 39-check DQ results
     ├── sql_query_catalog.md         # business question -> query -> finding, x27
-    ├── dashboard_build_guide.md      # Tableau build spec, page by page
-    └── resume_bullets.md              # Amazon-DA positioning & resume bullets
+    └── dashboard_build_guide.md      # Tableau build spec, page by page
 ```
 
 ---
 
 ## Tech stack
 
-- **Database:** PostgreSQL 16 (Redshift-compatible SQL — see [`redshift/DEPLOYMENT.md`](redshift/DEPLOYMENT.md))
+- **Database:** PostgreSQL 16 (Redshift-compatible SQL — DISTKEY/SORTKEY choices documented in `sql/marts/`)
 - **Pipeline:** Python (psycopg2, SQLAlchemy, pandas)
 - **Analysis:** pandas, NumPy, SciPy, statsmodels, scikit-learn
 - **Visualization:** matplotlib, seaborn, Plotly (notebooks); Tableau Public (dashboard)
@@ -155,8 +149,6 @@ question, query, result, finding) in [`docs/sql_query_catalog.md`](docs/sql_quer
 | [`docs/data_dictionary.md`](docs/data_dictionary.md) | Every column in raw/staging/marts and all 24 dashboard extracts |
 | [`docs/data_quality_report.md`](docs/data_quality_report.md) | 39-check DQ suite results (32 PASS / 0 FAIL / 7 INFO) |
 | [`docs/dashboard_build_guide.md`](docs/dashboard_build_guide.md) | Page-by-page Tableau build spec for all 7 dashboard pages |
-| [`docs/resume_bullets.md`](docs/resume_bullets.md) | Amazon DA-role positioning, resume bullets, JD-tailoring guide |
-| [`redshift/DEPLOYMENT.md`](redshift/DEPLOYMENT.md) | Runbook + 5 documented fixes for deploying this warehouse on real Redshift |
 
 ---
 

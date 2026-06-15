@@ -1,11 +1,11 @@
 """Build all CSV extracts that feed the 7-page Tableau Public dashboard.
 
 Each function below produces one (or a small family of) extract(s) for a single
-dashboard page. All logic is ported from the validated `notebooks/_build_nb0*.py`
-pipelines (NB1-NB6) so the dashboard numbers are guaranteed consistent with the
-notebook narrative -- this script does not introduce any new analytical methodology,
-it re-packages already-validated results into flat, pre-aggregated extracts that
-Tableau can consume directly.
+dashboard page. All logic mirrors the validated analysis in notebooks/01-06, so the
+dashboard numbers are guaranteed consistent with the notebook narrative -- this
+script does not introduce any new analytical methodology, it re-packages
+already-validated results into flat, pre-aggregated extracts that Tableau can
+consume directly.
 
 Usage:
     .venv/bin/python etl/export_dashboard_extracts.py

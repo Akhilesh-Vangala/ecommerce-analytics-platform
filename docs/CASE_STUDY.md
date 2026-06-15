@@ -28,7 +28,7 @@ and a 7-page, 24-extract interactive Tableau dashboard.
   (see Recommendation 1)
 - A 4-cluster behavioral segmentation found an **"At-Risk: Late & Unhappy"** segment
   (7,319 customers, 7.9% of the base) that is **invisible to standard RFM
-  segmentation** — it exists inside every RFM tier — but is 1.77x overrepresented in
+  segmentation** (it shows up inside every RFM tier) and is 1.77x overrepresented in
   the Northeast
 - Two production-style RandomForest models flag the riskiest 10% of orders at
   **order time**, catching **31.9% of all eventual late deliveries** (3.2x lift) and,
@@ -88,7 +88,7 @@ to do end-to-end, just compressed into a portfolio timeline.
   assignment, and risk score from the marts on each run — there is no hand-edited
   output anywhere in the pipeline.
 
-Full architecture detail: `PROJECT_PLAN.md`. Field-level definitions: `docs/data_dictionary.md`.
+Full architecture detail: see the Architecture section of `README.md`. Field-level definitions: `docs/data_dictionary.md`.
 
 ---
 
@@ -373,7 +373,7 @@ any subsequent repeat purchases.
 ### Recommendation 5 — Loyalty program targeting the "Loyal Repeat Customers" profile
 **Tied to:** §4.7 (segment table)
 **The opportunity:** this segment is only 2.5% of customers but has a **71.5%
-repeat-purchase rate** — 40x the rate of any other segment — plus the highest
+repeat-purchase rate** (40x the rate of any other segment), plus the highest
 installment usage (3.68) and category breadth (2.05). The defining inflection point is
 the **2nd purchase**: this segment's avg frequency (1.85) is the only one materially
 above 1.0.
@@ -460,7 +460,6 @@ late-rate distribution shown on Page 4.
 
 ## 9. Project Artifact Map
 
-- `PROJECT_PLAN.md` — architecture & scope
 - `docs/data_quality_report.md` — 39-check DQ framework results
 - `docs/data_dictionary.md` — field-level definitions (all marts + extracts)
 - `docs/sql_query_catalog.md` — business question → query → answer, all 4 SQL domains

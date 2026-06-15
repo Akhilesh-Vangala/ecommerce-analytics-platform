@@ -3,7 +3,6 @@
 -- Star schema, analysis-ready. Redshift notes: dimension tables here are all
 -- small (<100K rows) -> DISTSTYLE ALL (broadcast to every node) is the
 -- Redshift-recommended choice, so every join to a fact table is local.
--- See redshift/DEPLOYMENT.md for the full Redshift DDL variant.
 -- ============================================================================
 
 CREATE SCHEMA IF NOT EXISTS marts;
