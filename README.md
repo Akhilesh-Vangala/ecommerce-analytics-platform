@@ -87,11 +87,7 @@ PostgreSQL 16, but the schema is designed to map directly onto a real Redshift c
 ├── notebooks/                # 6 narrated Jupyter notebooks (EDA -> ML)
 ├── dashboard/extracts/        # 24 CSV extracts feeding the Tableau workbook
 └── docs/
-    ├── CASE_STUDY.md            # problem -> approach -> findings -> recommendations
-    ├── data_dictionary.md         # every column, every table/extract
-    ├── data_quality_report.md      # 39-check DQ results
-    ├── sql_query_catalog.md         # business question -> query -> finding, x27
-    └── dashboard_build_guide.md      # Tableau build spec, page by page
+    └── CASE_STUDY.md         # problem -> approach -> findings -> recommendations
 ```
 
 ---
@@ -125,7 +121,7 @@ createdb olist_analytics
 .venv/bin/python etl/run_sql.py sql/staging/01_staging_transform.sql
 .venv/bin/python etl/run_sql.py sql/marts/01_dims.sql
 .venv/bin/python etl/run_sql.py sql/marts/02_facts.sql
-.venv/bin/python etl/run_dq_checks.py     # writes docs/data_quality_report.md
+.venv/bin/python etl/run_dq_checks.py     # runs the 39-check DQ suite
 
 # 5. Notebooks (EDA, stats, segmentation, ML) - re-executes in place
 .venv/bin/jupyter nbconvert --to notebook --execute --inplace notebooks/*.ipynb
@@ -135,20 +131,8 @@ createdb olist_analytics
 ```
 
 The 27 SQL analytics queries in `sql/analytics/` are read-only against the `marts` schema and
-can be run individually with `psql` or any SQL client — each is documented end-to-end (business
-question, query, result, finding) in [`docs/sql_query_catalog.md`](docs/sql_query_catalog.md).
-
----
-
-## Documentation map
-
-| Doc | What's in it |
-|---|---|
-| [`docs/CASE_STUDY.md`](docs/CASE_STUDY.md) | Full narrative: problem framing, methodology, findings, and 8 business recommendations |
-| [`docs/sql_query_catalog.md`](docs/sql_query_catalog.md) | All 27 SQL queries — business question, SQL, result table, key finding |
-| [`docs/data_dictionary.md`](docs/data_dictionary.md) | Every column in raw/staging/marts and all 24 dashboard extracts |
-| [`docs/data_quality_report.md`](docs/data_quality_report.md) | 39-check DQ suite results (32 PASS / 0 FAIL / 7 INFO) |
-| [`docs/dashboard_build_guide.md`](docs/dashboard_build_guide.md) | Page-by-page Tableau build spec for all 7 dashboard pages |
+can be run individually with `psql` or any SQL client, organized into four business domains:
+revenue & growth, customer RFM/cohorts, fulfillment & SLA, and seller marketplace.
 
 ---
 
@@ -162,7 +146,7 @@ question, query, result, finding) in [`docs/sql_query_catalog.md`](docs/sql_quer
 6. Seller Marketplace
 7. Predictive Risk Scoring
 
-Built from the 24 CSVs in `dashboard/extracts/` per [`docs/dashboard_build_guide.md`](docs/dashboard_build_guide.md).
+Built from the 24 CSVs in `dashboard/extracts/`.
 
 ---
 

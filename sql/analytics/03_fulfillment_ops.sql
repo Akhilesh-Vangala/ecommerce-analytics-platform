@@ -7,12 +7,13 @@
 -- date") accuracy, on-time delivery rate (OTD) by geography and time, and the
 -- downstream impact of late delivery on customer satisfaction (review score).
 --
--- DQ-FLAG HANDLING: per docs/data_quality_report.md, 1.37% of orders have
--- order_delivered_carrier_date < order_approved_at (dq_carrier_before_approval)
--- and 0.02% have order_delivered_customer_date < order_delivered_carrier_date
--- (dq_delivered_before_carrier). These are source-data timestamp anomalies.
--- Every stage-timing query below excludes the affected rows from THAT STAGE's
--- average (the row's revenue/review data is still valid and used elsewhere).
+-- DQ-FLAG HANDLING: 1.37% of orders have order_delivered_carrier_date <
+-- order_approved_at (dq_carrier_before_approval) and 0.02% have
+-- order_delivered_customer_date < order_delivered_carrier_date
+-- (dq_delivered_before_carrier) - both flagged in sql/data_quality/dq_checks.sql
+-- as source-data timestamp anomalies. Every stage-timing query below excludes
+-- the affected rows from THAT STAGE's average (the row's revenue/review data
+-- is still valid and used elsewhere).
 -- ============================================================================
 
 

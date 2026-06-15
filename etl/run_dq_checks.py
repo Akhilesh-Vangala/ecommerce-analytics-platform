@@ -1,4 +1,4 @@
-"""Run the data-quality check suite and render docs/data_quality_report.md.
+"""Run the data-quality check suite and render a markdown report.
 
 Usage:
     .venv/bin/python etl/run_dq_checks.py
@@ -16,7 +16,7 @@ from db import get_psycopg2_connection
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SQL_FILE = PROJECT_ROOT / "sql" / "data_quality" / "dq_checks.sql"
-REPORT_FILE = PROJECT_ROOT / "docs" / "data_quality_report.md"
+REPORT_FILE = PROJECT_ROOT / "local_reference" / "docs" / "data_quality_report.md"
 
 logging.basicConfig(
     level=logging.INFO,

@@ -3,7 +3,7 @@
 -- Every check returns (category, check_name, status, detail, description).
 -- status is PASS/FAIL for assertions, INFO for descriptive metrics that are
 -- expected to be non-zero (documented data-quality realities, not bugs).
--- Run via etl/run_dq_checks.py, which renders docs/data_quality_report.md.
+-- Run via etl/run_dq_checks.py, which renders a markdown report.
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------
@@ -180,7 +180,8 @@ FROM marts.fact_order_payments fp LEFT JOIN marts.fact_orders fo ON fo.order_id 
 -- ---------------------------------------------------------------------------
 UNION ALL SELECT 'Temporal Consistency', 'order_approved_at >= order_purchase_timestamp',
        CASE WHEN COUNT(*) = 0 THEN 'PASS' ELSE 'FAIL' END,
-       COUNT(*)::text || ' violation(s)', 'Approval cannot precede purchase'
+       COUNT(*)::text || ' violation(s)', 'Approval cannot 
+       
 FROM marts.fact_orders WHERE order_approved_at IS NOT NULL AND order_approved_at < order_purchase_timestamp
 
 UNION ALL SELECT 'Temporal Consistency', 'dq_carrier_before_approval flags all carrier<approval rows',
