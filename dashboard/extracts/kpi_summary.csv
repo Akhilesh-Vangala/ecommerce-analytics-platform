@@ -1,0 +1,2 @@
+total_orders,valid_orders,total_customers,repeat_customers,repeat_rate_pct,total_gmv,aov,pct_late_overall,avg_review_score_overall,pct_negative_review_overall,total_sellers,date_range_start,date_range_end
+99441,98207,96096,2888,3.01,15735527.03,160.23,8.11,4.116,13.77,3088,2016-09-04,2018-09-03
