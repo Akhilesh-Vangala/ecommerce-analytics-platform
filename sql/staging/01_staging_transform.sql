@@ -7,9 +7,6 @@
 
 CREATE SCHEMA IF NOT EXISTS staging;
 
--- ----------------------------------------------------------------------------
--- stg_orders: pass-through with trimmed status. order_id verified unique in raw.
--- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS staging.stg_orders CASCADE;
 CREATE TABLE staging.stg_orders AS
 SELECT
@@ -26,11 +23,8 @@ SELECT
         AND order_delivered_customer_date IS NULL)  AS dq_delivered_missing_date
 FROM raw.orders;
 
--- ----------------------------------------------------------------------------
--- stg_customers: trim/normalize geography text. Grain = customer_id (one row
--- per order's customer record). customer_unique_id identifies the real person
--- and is deduplicated in marts.dim_customer.
--- ----------------------------------------------------------------------------
+-- Grain here is customer_id (one row per order's customer record);
+-- customer_unique_id, the actual person, gets deduplicated in marts.dim_customer.
 DROP TABLE IF EXISTS staging.stg_customers CASCADE;
 CREATE TABLE staging.stg_customers AS
 SELECT
@@ -41,9 +35,6 @@ SELECT
     UPPER(TRIM(customer_state))  AS customer_state
 FROM raw.customers;
 
--- ----------------------------------------------------------------------------
--- stg_sellers: trim/normalize geography text.
--- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS staging.stg_sellers CASCADE;
 CREATE TABLE staging.stg_sellers AS
 SELECT
@@ -53,11 +44,10 @@ SELECT
     UPPER(TRIM(seller_state))  AS seller_state
 FROM raw.sellers;
 
--- ----------------------------------------------------------------------------
--- stg_geolocation: raw has ~1M rows but only ~19K distinct zip prefixes, with
--- inconsistent city/state spellings per zip. Deduplicate to one row per zip:
--- average lat/lng (centroid) + the most frequently reported city/state.
--- ----------------------------------------------------------------------------
+-- Raw geolocation has ~1M pings but only ~19K distinct zip prefixes, with
+-- inconsistent city/state spellings recorded against the same zip. Collapse
+-- to one row per zip: average lat/lng for the centroid, plus the most
+-- frequently reported city/state pairing.
 DROP TABLE IF EXISTS staging.stg_geolocation CASCADE;
 CREATE TABLE staging.stg_geolocation AS
 WITH city_state_counts AS (
@@ -93,12 +83,9 @@ FROM centroids c
 JOIN city_state_counts csc
     ON csc.zip_code_prefix = c.zip_code_prefix AND csc.rn = 1;
 
--- ----------------------------------------------------------------------------
--- stg_products: attach English category names. Two categories present in
--- products are missing from the translation table (manually mapped below);
--- products with a NULL category, or a category with no translation, fall
--- back to 'unknown'. Also derive package volume for logistics analysis.
--- ----------------------------------------------------------------------------
+-- Two categories in raw.products have no match in the translation table
+-- (mapped manually below); anything still unmatched, or with a NULL
+-- category, falls back to 'unknown'.
 DROP TABLE IF EXISTS staging.stg_products CASCADE;
 CREATE TABLE staging.stg_products AS
 SELECT
@@ -126,9 +113,6 @@ FROM raw.products p
 LEFT JOIN raw.product_category_translation t
     ON p.product_category_name = t.product_category_name;
 
--- ----------------------------------------------------------------------------
--- stg_order_items: pass-through with non-negative price/freight validation.
--- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS staging.stg_order_items CASCADE;
 CREATE TABLE staging.stg_order_items AS
 SELECT
@@ -142,9 +126,6 @@ SELECT
     (price < 0 OR freight_value < 0) AS dq_negative_amount
 FROM raw.order_items;
 
--- ----------------------------------------------------------------------------
--- stg_order_payments: pass-through with non-negative value validation.
--- ----------------------------------------------------------------------------
 DROP TABLE IF EXISTS staging.stg_order_payments CASCADE;
 CREATE TABLE staging.stg_order_payments AS
 SELECT
@@ -156,12 +137,9 @@ SELECT
     (payment_value < 0) AS dq_negative_amount
 FROM raw.order_payments;
 
--- ----------------------------------------------------------------------------
--- stg_order_reviews: 547 orders have 2-3 review rows and 789 review_ids are
--- duplicated. Deduplicate to one review per order_id, keeping the most
--- recently created review (ties broken by review_answer_timestamp), and flag
--- orders that originally had multiple reviews.
--- ----------------------------------------------------------------------------
+-- 547 orders have 2-3 review rows (789 duplicated review_ids in total). Keep
+-- one review per order_id -- the most recently created, ties broken by
+-- review_answer_timestamp -- and flag orders that had multiple reviews.
 DROP TABLE IF EXISTS staging.stg_order_reviews CASCADE;
 CREATE TABLE staging.stg_order_reviews AS
 WITH ranked AS (

@@ -227,30 +227,25 @@ ORDER BY 1;
 
 -- ----------------------------------------------------------------------------
 -- Q3.8: ANOMALY DRILL-DOWN - the Feb-Mar 2018 OTD collapse.
--- Q3.2 surfaced a much bigger and unexplained spike than the Nov-2017 one:
--- monthly late rate jumped from ~7% (Jan-2018) to 16% (Feb-2018) to 21%
--- (Mar-2018), more than 2x the Black Friday effect. This query drills to
--- WEEKLY grain to pinpoint the window, then checks whether it's
--- geographically broad (systemic) or concentrated in a few states (regional
--- carrier issue).
+-- Q3.2 showed monthly late rate jumping from ~7% (Jan-2018) to 16% (Feb) to
+-- 21% (Mar), more than 2x the Nov-2017 Black Friday effect. This drills to
+-- weekly grain to find the exact window and checks whether it's systemic or
+-- a regional carrier issue.
 --
--- FINDING: late rate climbs from ~8% (weeks of Jan 15-Feb 5) to a peak of
--- 29.0% in the week of Feb 26 and 27.7% in the week of Mar 5, then recovers
--- to ~4% by mid-April. avg_actual_delivery_days follows the same shape
--- (13-14 days -> ~17-19 days -> back to ~12 days). The state-level cut for
--- Feb-Mar 2018 shows the spike hitting 10+ states across every region of
--- Brazil (CE, MA, AL, RJ, PA, MS, PI, ES, BA, SC all >24% late, vs. their
--- typical <16% from Q3.4) - i.e. broad-based, not one regional carrier.
+-- FINDING: late rate climbs from ~8% (Jan 15-Feb 5) to a peak of 29.0% in the
+-- week of Feb 26 and 27.7% in the week of Mar 5, recovering to ~4% by
+-- mid-April. avg_actual_delivery_days follows the same shape (13-14 days ->
+-- ~17-19 days -> ~12 days). The state-level cut shows 10+ states across
+-- every region above 24% late (vs. their typical <16% from Q3.4), so this is
+-- broad-based, not one regional carrier.
 --
--- HYPOTHESIS (not verifiable from this dataset alone - flagged as a "would
--- investigate with carrier-ops data" item, exactly the kind of root-cause
--- question an Amazon Ops BA would be asked to chase): Brazilian Carnival fell
--- on Feb 10-14, 2018. Orders placed in the 1-2 weeks around a national
--- holiday that shuts down postal/carrier operations would sit in carrier
--- backlog and arrive ~2 weeks later than normal - precisely the Feb 19-Mar 12
--- delivery window where the spike is concentrated. The clean recovery to
--- baseline by April supports a one-time backlog (cleared) rather than a
--- persistent capacity problem.
+-- HYPOTHESIS (unverifiable from this dataset alone, would need carrier-ops
+-- data to confirm): Brazilian Carnival fell on Feb 10-14, 2018. A national
+-- holiday that shuts down postal/carrier operations would push orders placed
+-- in the surrounding 1-2 weeks into a backlog, arriving ~2 weeks later than
+-- normal - which lines up with the Feb 19-Mar 12 delivery window where the
+-- spike is concentrated. The clean recovery by April supports a one-time
+-- backlog rather than a persistent capacity problem.
 -- ----------------------------------------------------------------------------
 SELECT
     DATE_TRUNC('week', order_purchase_date)::date AS week,
