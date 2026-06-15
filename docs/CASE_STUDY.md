@@ -3,7 +3,7 @@
 **Role simulated:** Data Analyst / Business Analyst supporting Operations, Customer
 Experience, and Marketplace leadership at a large e-commerce/logistics company.
 **Dataset:** [Olist Brazilian E-Commerce Public Dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)
-— 99,441 orders, 96,096 customers, 3,088 sellers, 74 product categories, Sep 2016 –
+— 99,441 orders, 96,096 customers, 3,095 sellers, 74 product categories, Sep 2016 –
 Sep 2018.
 **Stack:** PostgreSQL 16 (Redshift-compatible SQL) → Python (pandas, scikit-learn,
 statsmodels, scipy) → Tableau Public.
