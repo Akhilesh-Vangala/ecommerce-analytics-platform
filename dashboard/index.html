@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Olist E-Commerce Analytics · Amazon Retail Analog</title>
+<meta name="description" content="End-to-end e-commerce analytics: R$15.7M GMV, 99K orders, fulfillment ops, customer segmentation & predictive risk — Olist Brazilian E-Commerce dataset.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23E8620A'/%3E%3Cpath d='M21 8v8a1 1 0 0 1-.5.87l-8 4.5a1 1 0 0 1-1 0l-8-4.5A1 1 0 0 1 3 16V8a1 1 0 0 1 .5-.87l8-4.5a1 1 0 0 1 1 0l8 4.5A1 1 0 0 1 21 8Z' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M3.27 7.5 12 12l8.73-4.5M12 22V12' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08111e;--bg2:#0d1b2a;--card:#112240;--card2:#162a48;
+  --border:rgba(255,255,255,0.07);--bh:rgba(232,98,10,0.35);
+  --orange:#E8620A;--teal:#1B7F8E;--red:#D94F3D;
+  --green:#4CAF50;--gold:#F4C842;--grey:#8A9BB0;--grey2:#4a5d74;
+  --white:#fff;--text:#cdd9e5;--sw:240px;--r:12px;--r2:8px;
+}
+html,body{height:100%}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:14px;line-height:1.5;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--grey2);border-radius:3px}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sw);min-height:100vh;background:linear-gradient(180deg,#060e1b 0%,var(--bg2) 100%);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:1000}
+.sb-header{padding:22px 18px;border-bottom:1px solid var(--border)}
+.sb-brand{display:flex;align-items:center;gap:11px}
+.brand-icon{width:38px;height:38px;background:linear-gradient(135deg,#E8620A,#ff9944);border-radius:var(--r2);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;box-shadow:0 0 22px rgba(232,98,10,.35)}
+.brand-title{font-size:13px;font-weight:800;color:var(--white);letter-spacing:.01em}
+.brand-sub{font-size:10px;color:var(--grey);margin-top:1px}
+.nav-lbl{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--grey2);padding:14px 18px 6px}
+.nav-list{list-style:none;padding:6px 10px;flex:1;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:var(--r2);cursor:pointer;transition:all .18s;color:var(--grey);font-size:12.5px;font-weight:500;margin-bottom:2px;user-select:none}
+.nav-item:hover{background:rgba(255,255,255,.05);color:var(--white)}
+.nav-item.active{background:linear-gradient(135deg,rgba(232,98,10,.18),rgba(232,98,10,.06));color:var(--orange);border:1px solid rgba(232,98,10,.25)}
+.nav-icon{width:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-footer{padding:14px 18px;border-top:1px solid var(--border);font-size:10.5px;color:var(--grey2);line-height:1.7}
+.sb-footer strong{color:var(--grey)}
+
+/* ── MAIN ── */
+.main-content{margin-left:var(--sw);flex:1;min-height:100vh;overflow-x:hidden}
+.page{display:none;padding:26px 26px 48px;animation:fadeIn .28s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.page-header{margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid var(--border)}
+.page-header h1{font-size:22px;font-weight:800;color:var(--white);letter-spacing:-.02em}
+.page-header p{font-size:12.5px;color:var(--grey);margin-top:4px}
+
+/* ── KPI TILES ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:22px}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;position:relative;overflow:hidden;transition:all .2s;cursor:default}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:3px 3px 0 0}
+.kpi-card.c-or::before{background:linear-gradient(90deg,#E8620A,#ff9944)}
+.kpi-card.c-te::before{background:linear-gradient(90deg,#1B7F8E,#22a0b0)}
+.kpi-card.c-re::before{background:linear-gradient(90deg,#D94F3D,#e8736a)}
+.kpi-card.c-gr::before{background:linear-gradient(90deg,#4CAF50,#66bb6a)}
+.kpi-card.c-go::before{background:linear-gradient(90deg,#F4C842,#ffe082)}
+.kpi-card:hover{border-color:rgba(255,255,255,.15);transform:translateY(-2px);box-shadow:0 6px 28px rgba(0,0,0,.35)}
+.kpi-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--grey);margin-bottom:7px}
+.kpi-val{font-size:26px;font-weight:900;color:var(--white);line-height:1;letter-spacing:-.02em}
+.kpi-sub{font-size:10.5px;color:var(--grey);margin-top:5px}
+
+/* ── GRID ── */
+.cg{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+.c12{grid-column:span 12}.c8{grid-column:span 8}.c7{grid-column:span 7}
+.c6{grid-column:span 6}.c5{grid-column:span 5}.c4{grid-column:span 4}.c3{grid-column:span 3}
+
+/* ── CHART CARD ── */
+.cc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;transition:border-color .2s}
+.cc:hover{border-color:rgba(255,255,255,.12)}
+.cc-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:8px}
+.cc-hdr h3{font-size:13px;font-weight:700;color:var(--white);letter-spacing:-.01em}
+.cc-note{font-size:10.5px;color:var(--grey);margin-top:3px}
+.badge{font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:100px;flex-shrink:0;white-space:nowrap}
+.b-or{background:rgba(232,98,10,.15);color:#ff8c3d;border:1px solid rgba(232,98,10,.3)}
+.b-re{background:rgba(217,79,61,.15);color:#e87a6e;border:1px solid rgba(217,79,61,.3)}
+.b-gr{background:rgba(76,175,80,.15);color:#6ec473;border:1px solid rgba(76,175,80,.3)}
+.b-go{background:rgba(244,200,66,.15);color:#f7d460;border:1px solid rgba(244,200,66,.3)}
+.b-te{background:rgba(27,127,142,.15);color:#3aadbe;border:1px solid rgba(27,127,142,.3)}
+.cw{position:relative}
+canvas{max-width:100%}
+
+/* ── CALLOUT ── */
+.callout{border-radius:var(--r2);padding:12px 15px;margin-bottom:18px;font-size:12px;line-height:1.7}
+.callout.red{background:linear-gradient(135deg,rgba(217,79,61,.1),rgba(217,79,61,.04));border:1px solid rgba(217,79,61,.3)}
+.callout.gold{background:linear-gradient(135deg,rgba(244,200,66,.1),rgba(244,200,66,.04));border:1px solid rgba(244,200,66,.3)}
+.callout.teal{background:linear-gradient(135deg,rgba(27,127,142,.1),rgba(27,127,142,.04));border:1px solid rgba(27,127,142,.3)}
+.callout strong.r{color:#e87a6e}.callout strong.g{color:#f7d460}.callout strong.t{color:#3aadbe}
+
+/* ── MAP ── */
+.map-box{width:100%;height:360px;position:relative;background:rgba(255,255,255,.02);border-radius:var(--r2);overflow:hidden}
+.map-box svg{width:100%;height:100%}
+#mtt{position:fixed;background:var(--card2);border:1px solid var(--border);border-radius:var(--r2);padding:10px 13px;font-size:11.5px;pointer-events:none;z-index:9999;opacity:0;transition:opacity .12s;min-width:155px;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+#mtt.on{opacity:1}
+#mtt .ts{font-weight:700;color:var(--white);margin-bottom:5px;font-size:12.5px}
+#mtt .tr{display:flex;justify-content:space-between;gap:14px;color:var(--grey);font-size:11px}
+#mtt .tv{color:var(--text);font-weight:600}
+.map-legend{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:10px;color:var(--grey)}
+.legend-bar{height:8px;flex:1;border-radius:4px}
+
+/* ── HEATMAP ── */
+.hmg{display:grid;gap:3px}
+.hmc{display:flex;align-items:center;justify-content:center;border-radius:4px;transition:transform .15s;height:48px;font-size:11px}
+.hmc:hover{transform:scale(1.04);z-index:2;position:relative}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto}
+table.dt{width:100%;border-collapse:collapse;font-size:11.5px}
+table.dt th{background:rgba(255,255,255,.04);color:var(--grey);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:9px 11px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+table.dt td{padding:8px 11px;color:var(--text);border-bottom:1px solid rgba(255,255,255,.04)}
+table.dt tr:last-child td{border-bottom:none}
+table.dt tr:hover td{background:rgba(255,255,255,.02)}
+.pill{display:inline-block;padding:2px 7px;border-radius:100px;font-size:10.5px;font-weight:700}
+.p-re{background:rgba(217,79,61,.15);color:#e87a6e}
+.p-gr{background:rgba(76,175,80,.15);color:#6ec473}
+.p-go{background:rgba(244,200,66,.15);color:#f7d460}
+.p-te{background:rgba(27,127,142,.15);color:#3aadbe}
+.p-gy{background:rgba(138,155,176,.12);color:var(--grey)}
+
+/* ── SEGMENT CARDS ── */
+.seg-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.seg-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;text-align:center;transition:all .2s}
+.seg-card:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.3)}
+.seg-name{font-size:11px;font-weight:800;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em}
+.seg-val{font-size:28px;font-weight:900;line-height:1}
+.seg-lbl{font-size:10px;color:var(--grey);margin-top:3px}
+.seg-stat{font-size:11.5px;margin-top:9px;line-height:1.5}
+
+/* ── LOADING ── */
+.loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9000;transition:opacity .45s}
+.loading.out{opacity:0;pointer-events:none}
+.spinner{width:44px;height:44px;border:3px solid rgba(232,98,10,.2);border-top-color:var(--orange);border-radius:50%;animation:spin .75s linear infinite;margin-bottom:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-txt{font-size:13.5px;color:var(--grey);font-weight:600}
+.load-sub{font-size:11px;color:var(--grey2);margin-top:3px;font-family:monospace}
+
+/* ── MISC ── */
+.mt{margin-top:14px}
+.insight{background:rgba(255,255,255,.025);border-left:3px solid var(--orange);padding:10px 14px;border-radius:0 var(--r2) var(--r2) 0;font-size:11.5px;line-height:1.7;margin-top:10px}
+.insight strong{color:var(--white)}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sb-header">
+    <div class="sb-brand">
+      <div class="brand-icon"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v8a1 1 0 0 1-.5.87l-8 4.5a1 1 0 0 1-1 0l-8-4.5A1 1 0 0 1 3 16V8a1 1 0 0 1 .5-.87l8-4.5a1 1 0 0 1 1 0l8 4.5A1 1 0 0 1 21 8Z"/><path d="M3.27 7.5 12 12l8.73-4.5M12 22V12"/></svg></div>
+      <div>
+        <div class="brand-title">Olist Analytics</div>
+        <div class="brand-sub">E-Commerce Intelligence</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav-lbl">Analytics</div>
+  <ul class="nav-list">
+    <li class="nav-item active" data-p="exec"    onclick="showPage('exec')">   <span class="nav-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4M12 16V8M17 16v-7"/></svg></span> Executive Overview</li>
+    <li class="nav-item"        data-p="cat"     onclick="showPage('cat')">    <span class="nav-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L3.24 9.59A2 2 0 0 0 3.83 11l9.58 9.59a2 2 0 0 0 2.83 0l4.34-4.34a2 2 0 0 0 .01-2.84Z"/><circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"/></svg></span> Sales & Category</li>
+    <li class="nav-item"        data-p="geo"     onclick="showPage('geo')">    <span class="nav-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.3"/></svg></span> Geography</li>
+    <li class="nav-item"        data-p="ops"     onclick="showPage('ops')">    <span class="nav-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16V6a1 1 0 0 1 1-1h9v11"/><path d="M13 9h4l4 4v3h-3"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg></span> Delivery & Fulfillment</li>
+    <li class="nav-item"        data-p="seg"     onclick="showPage('seg')">    <span class="nav-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2.5 19a6.5 6.5 0 0 1 13 0"/><circle cx="17.5" cy="9.5" r="2.5"/><path d="M15.5 13.5a5 5 0 0 1 6 5.5"/></svg></span> Customer Segmentation</li>
+    <li class="nav-item"        data-p="sell"    onclick="showPage('sell')">   <span class="nav-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9 4.5 4h15L21 9"/><path d="M3 9h18v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"/><path d="M9 13a2 2 0 1 1-4 0M19 13a2 2 0 1 1-4 0"/></svg></span> Seller Marketplace</li>
+    <li class="nav-item"        data-p="risk"    onclick="showPage('risk')">   <span class="nav-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></span> Predictive Risk</li>
+  </ul>
+  <div class="sb-footer">
+    <strong>Olist Brazilian E-Commerce</strong><br>
+    99,441 orders · 96,096 customers<br>
+    3,088 sellers · Sep 2016 – Sep 2018
+  </div>
+</nav>
+
+<div id="mtt"><div class="ts" id="mts"></div><div id="mtc"></div></div>
+
+<div class="loading" id="ld">
+  <div class="spinner"></div>
+  <div class="load-txt">Loading analytics data…</div>
+  <div class="load-sub" id="ldsub">Initialising…</div>
+</div>
+
+<main class="main-content">
+
+<!-- ══════════════ PAGE 1: EXECUTIVE OVERVIEW ══════════════ -->
+<div class="page active" id="page-exec">
+  <div class="page-header">
+    <h1>Executive Overview</h1>
+    <p>Marketplace performance summary · Sep 2016 – Sep 2018 · R$ Brazilian Real throughout</p>
+  </div>
+  <div class="kpi-grid" id="kpi-grid"></div>
+  <div class="cg">
+    <div class="cc c8">
+      <div class="cc-hdr">
+        <div><h3>GMV & Order Volume Trend</h3><div class="cc-note">Full months only (Jan 2017 – Aug 2018) · Orange = GMV · Teal dashed = Orders</div></div>
+      </div>
+      <div class="cw" style="height:270px"><canvas id="c-gmv"></canvas></div>
+    </div>
+    <div class="cc c4">
+      <div class="cc-hdr"><div><h3>Cumulative GMV</h3></div><span class="badge b-or">R$15.7M</span></div>
+      <div class="cw" style="height:270px"><canvas id="c-cum"></canvas></div>
+    </div>
+    <div class="cc c6">
+      <div class="cc-hdr"><div><h3>Month-over-Month GMV Growth</h3><div class="cc-note">Orange = positive · Red = negative</div></div></div>
+      <div class="cw" style="height:230px"><canvas id="c-mom"></canvas></div>
+    </div>
+    <div class="cc c6">
+      <div class="cc-hdr"><div><h3>Seasonality — GMV vs Trailing 3-Month Average</h3><div class="cc-note">Gold bars = seasonal spike (&gt;30% above trend) · Nov 2017 Black Friday: <strong style="color:#f7d460">+64%</strong></div></div></div>
+      <div class="cw" style="height:230px"><canvas id="c-sea"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ PAGE 2: CATEGORY ══════════════ -->
+<div class="page" id="page-cat">
+  <div class="page-header">
+    <h1>Sales & Category Performance</h1>
+    <p>Revenue Pareto · category mix over time · review vs late-rate quality matrix · 74 categories</p>
+  </div>
+  <div class="cg">
+    <div class="cc c12">
+      <div class="cc-hdr"><div><h3>Category Revenue Pareto — Top 20 (with Cumulative %)</h3><div class="cc-note">Top 10 categories = 65.9% of total revenue · Gold line = cumulative %</div></div><span class="badge b-or">74 categories</span></div>
+      <div class="cw" style="height:290px"><canvas id="c-cpar"></canvas></div>
+    </div>
+    <div class="cc c7">
+      <div class="cc-hdr"><div><h3>Category Revenue Mix Over Time</h3><div class="cc-note">Stacked · Top-10 categories + "other" · Jan 2017 – Aug 2018</div></div></div>
+      <div class="cw" style="height:270px"><canvas id="c-cmix"></canvas></div>
+    </div>
+    <div class="cc c5">
+      <div class="cc-hdr"><div><h3>Category Quality Matrix</h3><div class="cc-note">Review score vs late rate · circle size = revenue · ≥200 items</div></div></div>
+      <div class="cw" style="height:270px"><canvas id="c-cqual"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ PAGE 3: GEOGRAPHY ══════════════ -->
+<div class="page" id="page-geo">
+  <div class="page-header">
+    <h1>Geographic Analysis</h1>
+    <p>Customer demand vs seller supply · state-level delivery performance · 27 Brazilian states</p>
+  </div>
+  <div class="cg">
+    <div class="cc c6">
+      <div class="cc-hdr"><div><h3>Customer Demand — % of GMV by State</h3><div class="cc-note">SP = 37.4% · Top 5 states = 73.1% of GMV</div></div></div>
+      <div class="map-box" id="map-dem"></div>
+    </div>
+    <div class="cc c6">
+      <div class="cc-hdr"><div><h3>Late Delivery Rate by State</h3><div class="cc-note">AL = 23.9% · RO = 2.9% — 8× variation across states</div></div><span class="badge b-re">Avg 8.1%</span></div>
+      <div class="map-box" id="map-late"></div>
+    </div>
+    <div class="cc c6">
+      <div class="cc-hdr"><div><h3>Top 15 States — GMV & Late Rate</h3></div></div>
+      <div class="cw" style="height:320px"><canvas id="c-stbar"></canvas></div>
+    </div>
+    <div class="cc c6">
+      <div class="cc-hdr"><div><h3>Order Flow: Customer Region → Seller Region</h3><div class="cc-note">Values = order count · % = late rate</div></div></div>
+      <div id="flow-matrix" style="margin-top:4px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ PAGE 4: FULFILLMENT ══════════════ -->
+<div class="page" id="page-ops">
+  <div class="page-header">
+    <h1>Delivery & Fulfillment Operations</h1>
+    <p>Cycle time · The satisfaction cliff · Feb–Mar 2018 Carnival anomaly drill-down</p>
+  </div>
+  <div class="callout red"><strong class="r">The Satisfaction Cliff:</strong> Orders delayed 4+ days = just 5.2% of reviewed deliveries but drive <strong class="r">29.6% of all negative reviews</strong>. Avg score collapses: 4.30 (early) → 4.14 (on-time) → 3.77 (1-3d late) → <strong class="r">2.32 (4-7d late) → 1.73 (8+d late)</strong>. The 1★ rate jumps from 6.5% to 68.8%.</div>
+  <div class="cg">
+    <div class="cc c6">
+      <div class="cc-hdr"><div><h3>Satisfaction Cliff — Avg Review by Delay Bucket</h3><div class="cc-note">Steepest drop at 4-day threshold</div></div><span class="badge b-re">KEY FINDING</span></div>
+      <div class="cw" style="height:250px"><canvas id="c-cliff"></canvas></div>
+    </div>
+    <div class="cc c6">
+      <div class="cc-hdr"><div><h3>1-Star Rate by Delivery Delay Bucket</h3><div class="cc-note">Late 8+ days: 68.8% of orders receive 1★</div></div></div>
+      <div class="cw" style="height:250px"><canvas id="c-1star"></canvas></div>
+    </div>
+    <div class="cc c5">
+      <div class="cc-hdr"><div><h3>Fulfillment Cycle Time</h3><div class="cc-note">Average vs P90 · Approval in hours, rest in days</div></div><span class="badge b-go">Avg / P90</span></div>
+      <div class="cw" style="height:230px"><canvas id="c-cyc"></canvas></div>
+    </div>
+    <div class="cc c7">
+      <div class="cc-hdr"><div><h3>Feb–Mar 2018 Carnival Anomaly — Weekly Late Rate</h3><div class="cc-note">Peak week (Feb 26): <strong style="color:#e87a6e">28.99% late</strong> · National carrier backlog after Carnival (Feb 10–14)</div></div><span class="badge b-re">Anomaly</span></div>
+      <div class="cw" style="height:230px"><canvas id="c-anom"></canvas></div>
+    </div>
+    <div class="cc c12">
+      <div class="cc-hdr"><div><h3>State Late Rate: Normal (Sep–Dec 2017) vs Spike (Feb–Mar 2018)</h3></div></div>
+      <div class="cw" style="height:280px"><canvas id="c-sotd"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ PAGE 5: SEGMENTATION ══════════════ -->
+<div class="page" id="page-seg">
+  <div class="page-header">
+    <h1>Customer Segmentation</h1>
+    <p>RFM quintile segmentation + K-Means behavioral clustering (k=4, validated) · 96,096 customers</p>
+  </div>
+  <div class="callout gold"><strong class="g">96.9% of customers are one-time buyers</strong> — month-1 retention just 0.48%. Growth is almost entirely new-customer acquisition. Win-back opportunity: High-Value Lapsed segment (15.6% of customers, <strong class="g">29.3% of revenue</strong>, avg R$310/customer).</div>
+  <div class="seg-cards" id="seg-cards"></div>
+  <div class="cg">
+    <div class="cc c6">
+      <div class="cc-hdr"><div><h3>RFM Segments — Share of Revenue</h3></div><span class="badge b-go">5 segments</span></div>
+      <div class="cw" style="height:270px"><canvas id="c-rfm"></canvas></div>
+    </div>
+    <div class="cc c6">
+      <div class="cc-hdr"><div><h3>Behavioral Clusters — Customers vs Revenue Share</h3><div class="cc-note">K-Means k=4 · Bootstrap ARI = 0.979 (highly stable)</div></div></div>
+      <div class="cw" style="height:270px"><canvas id="c-bseg"></canvas></div>
+    </div>
+    <div class="cc c12">
+      <div class="cc-hdr"><div><h3>RFM Segment Detail</h3></div></div>
+      <div class="tbl-wrap" id="rfm-tbl"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ PAGE 6: SELLERS ══════════════ -->
+<div class="page" id="page-sell">
+  <div class="page-header">
+    <h1>Seller Marketplace</h1>
+    <p>Revenue concentration · performance scorecard · supply geography · 3,088 active sellers</p>
+  </div>
+  <div class="callout teal"><strong class="t">Top 10% of sellers (306 of 3,088) generate 67.5% of marketplace GMV</strong> — significant concentration risk. SP sellers supply 64.6% of revenue but consume only 37.4% as buyers (self-sufficiency ratio 1.73×).</div>
+  <div class="cg">
+    <div class="cc c12">
+      <div class="cc-hdr"><div><h3>Seller Revenue Concentration — Pareto by Decile (with Cumulative %)</h3><div class="cc-note">Decile 1 = top 10% highest-revenue sellers</div></div><span class="badge b-or">3,088 sellers</span></div>
+      <div class="cw" style="height:270px"><canvas id="c-spar"></canvas></div>
+    </div>
+    <div class="cc c12">
+      <div class="cc-hdr"><div><h3>Top 20 Sellers — Performance Scorecard</h3></div><span class="badge b-go">Revenue ranked</span></div>
+      <div class="tbl-wrap" id="sell-tbl"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ PAGE 7: RISK ══════════════ -->
+<div class="page" id="page-risk">
+  <div class="page-header">
+    <h1>Predictive Risk Scoring</h1>
+    <p>Two RandomForest classifiers — early warning for delivery failures and satisfaction risk · Full-population retrain</p>
+  </div>
+  <div class="cg">
+    <div class="cc c6">
+      <div class="cc-hdr"><div><h3>Model A: Late-Delivery Risk — Decile Lift</h3><div class="cc-note">Order-time features only · AUC = 0.742 · Baseline 8.19% late</div></div><span class="badge b-or">3.2× lift @ D1</span></div>
+      <div class="cw" style="height:250px"><canvas id="c-la"></canvas></div>
+    </div>
+    <div class="cc c6">
+      <div class="cc-hdr"><div><h3>Model B: Negative Review Risk — Decile Lift</h3><div class="cc-note">Post-delivery features · AUC ≈ 0.745 · Baseline 12.81% negative</div></div><span class="badge b-re">4.4× lift @ D1</span></div>
+      <div class="cw" style="height:250px"><canvas id="c-lb"></canvas></div>
+    </div>
+    <div class="cc c6">
+      <div class="cc-hdr"><div><h3>Model A: Feature Importance (Grouped)</h3><div class="cc-note"><strong style="color:#f7d460">purchase_month (52.6%)</strong> driven by Feb–Mar 2018 anomaly — not a recurring seasonal feature</div></div></div>
+      <div class="cw" style="height:255px"><canvas id="c-fia"></canvas></div>
+    </div>
+    <div class="cc c6">
+      <div class="cc-hdr"><div><h3>Model B: Feature Importance (Grouped)</h3><div class="cc-note"><strong style="color:#e87a6e">Delivery features = 71.8%</strong> of negative-review prediction power</div></div></div>
+      <div class="cw" style="height:255px"><canvas id="c-fib"></canvas></div>
+    </div>
+  </div>
+</div>
+
+</main><!-- /main -->
+
+<script>
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CONSTANTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const CHARTS={}, DATA={};
+let GEO=null;
+
+const C={
+  or:'#E8620A',te:'#1B7F8E',re:'#D94F3D',
+  gr:'#4CAF50',go:'#F4C842',gy:'#8A9BB0',wh:'#FFFFFF',
+  a:(h,a)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`}
+};
+
+const CAT_PAL=['#E8620A','#1B7F8E','#F4C842','#4CAF50','#9B59B6',
+  '#E74C3C','#3498DB','#F39C12','#2ECC71','#1ABC9C','#8A9BB0'];
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   HELPERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function fmtM(v){if(v>=1e6)return`R$${(v/1e6).toFixed(2)}M`;if(v>=1e3)return`R$${(v/1e3).toFixed(1)}K`;return`R$${v.toFixed(0)}`}
+function fmtP(v,d=1){return`${(+v).toFixed(d)}%`}
+function fmtN(v){return(+v).toLocaleString()}
+function isT(v){return v===true||v==='True'||v==='true'||v===1||v==='1'}
+function mLbl(m){const d=new Date(m);return d.toLocaleDateString('en-US',{month:'short',year:'2-digit'})}
+function destroy(id){if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id]}}
+
+/* Chart.js base options */
+function base(extra={}){
+  return{
+    responsive:true,maintainAspectRatio:false,
+    animation:{duration:480},
+    plugins:{
+      legend:{labels:{color:'#8A9BB0',font:{size:11},boxWidth:11,boxHeight:11,padding:13}},
+      tooltip:{backgroundColor:'#162a48',titleColor:'#fff',bodyColor:'#cdd9e5',
+               borderColor:'rgba(255,255,255,0.1)',borderWidth:1,padding:9,cornerRadius:7,boxPadding:3}
+    },
+    scales:{
+      x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',font:{size:10}}},
+      y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',font:{size:10}}}
+    },
+    ...extra
+  };
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   DATA LOADING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function loadCSV(path){
+  return new Promise((res,rej)=>Papa.parse(path,{
+    download:true,header:true,dynamicTyping:true,skipEmptyLines:true,
+    complete:r=>res(r.data),error:rej
+  }));
+}
+
+async function loadAll(){
+  const sub=t=>document.getElementById('ldsub').textContent=t;
+  sub('Loading KPIs…');
+  [DATA.kpi,DATA.mKPI,DATA.sea]=await Promise.all([
+    loadCSV('extracts/kpi_summary.csv'),
+    loadCSV('extracts/monthly_kpis.csv'),
+    loadCSV('extracts/seasonality_analysis.csv'),
+  ]);
+  DATA.kpi=DATA.kpi[0];
+
+  sub('Loading category data…');
+  [DATA.catS,DATA.catM,DATA.topP]=await Promise.all([
+    loadCSV('extracts/category_summary.csv'),
+    loadCSV('extracts/category_monthly_mix.csv'),
+    loadCSV('extracts/top_products.csv'),
+  ]);
+
+  sub('Loading geographic data…');
+  [DATA.geoC,DATA.geoS,DATA.flow]=await Promise.all([
+    loadCSV('extracts/geo_customer_state_summary.csv'),
+    loadCSV('extracts/geo_seller_state_summary.csv'),
+    loadCSV('extracts/region_flow_matrix.csv'),
+  ]);
+
+  sub('Loading fulfillment data…');
+  [DATA.cyc,DATA.del,DATA.wkly,DATA.sotd]=await Promise.all([
+    loadCSV('extracts/cycle_time_stages.csv'),
+    loadCSV('extracts/delay_bucket_vs_review.csv'),
+    loadCSV('extracts/fulfillment_weekly_2018.csv'),
+    loadCSV('extracts/anomaly_state_comparison.csv'),
+  ]);
+
+  sub('Loading segmentation data…');
+  [DATA.rfm,DATA.segP]=await Promise.all([
+    loadCSV('extracts/rfm_segment_summary.csv'),
+    loadCSV('extracts/segment_profile_summary.csv'),
+  ]);
+
+  sub('Loading seller data…');
+  [DATA.sprt,DATA.scard]=await Promise.all([
+    loadCSV('extracts/seller_pareto_deciles.csv'),
+    loadCSV('extracts/seller_scorecard.csv'),
+  ]);
+
+  sub('Loading risk model data…');
+  [DATA.fiA,DATA.fiB]=await Promise.all([
+    loadCSV('extracts/feature_importance_model_a.csv'),
+    loadCSV('extracts/feature_importance_model_b.csv'),
+  ]);
+
+  sub('Loading Brazil map…');
+  try{
+    GEO=await d3.json('data/br_states.geojson');
+  }catch(e){console.warn('Map GeoJSON failed to load',e);}
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   NAVIGATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const renderers={exec:renderExec,cat:renderCat,geo:renderGeo,ops:renderOps,seg:renderSeg,sell:renderSell,risk:renderRisk};
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelector(`[data-p="${id}"]`).classList.add('active');
+  renderers[id]?.();
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PAGE 1 — EXECUTIVE OVERVIEW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function renderExec(){
+  const k=DATA.kpi;
+  document.getElementById('kpi-grid').innerHTML=`
+    <div class="kpi-card c-or"><div class="kpi-lbl">Total GMV</div><div class="kpi-val">R$${(k.total_gmv/1e6).toFixed(2)}M</div><div class="kpi-sub">${fmtN(k.valid_orders)} valid orders</div></div>
+    <div class="kpi-card c-te"><div class="kpi-lbl">Total Orders</div><div class="kpi-val">${fmtN(k.total_orders)}</div><div class="kpi-sub">97.02% delivered</div></div>
+    <div class="kpi-card c-or"><div class="kpi-lbl">Avg Order Value</div><div class="kpi-val">R$${(+k.aov).toFixed(2)}</div><div class="kpi-sub">Brazilian Real</div></div>
+    <div class="kpi-card c-go"><div class="kpi-lbl">Repeat Rate</div><div class="kpi-val">${(+k.repeat_rate_pct).toFixed(1)}%</div><div class="kpi-sub">${fmtN(k.repeat_customers)} repeat buyers</div></div>
+    <div class="kpi-card c-re"><div class="kpi-lbl">Late Delivery Rate</div><div class="kpi-val">${(+k.pct_late_overall).toFixed(1)}%</div><div class="kpi-sub">Ranges 2.9%–23.9% by state</div></div>
+    <div class="kpi-card c-gr"><div class="kpi-lbl">Avg Review Score</div><div class="kpi-val">${(+k.avg_review_score_overall).toFixed(2)} ★</div><div class="kpi-sub">${(+k.pct_negative_review_overall).toFixed(1)}% negative (1-2★)</div></div>
+  `;
+
+  const full=DATA.mKPI.filter(d=>isT(d.is_full_month));
+  const lbs=full.map(d=>mLbl(d.month));
+
+  /* GMV + Orders dual axis */
+  destroy('gmv');
+  CHARTS['gmv']=new Chart(document.getElementById('c-gmv'),{
+    type:'line',
+    data:{labels:lbs,datasets:[
+      {label:'GMV (R$)',data:full.map(d=>d.gmv),borderColor:C.or,backgroundColor:C.a(C.or,0.12),fill:true,tension:0.4,borderWidth:2.5,pointRadius:2.5,pointHoverRadius:5,yAxisID:'y'},
+      {label:'Orders (#)',data:full.map(d=>d.n_orders),borderColor:C.te,backgroundColor:'transparent',fill:false,tension:0.4,borderWidth:2,borderDash:[5,3],pointRadius:2,pointHoverRadius:4,yAxisID:'y2'}
+    ]},
+    options:{...base(),scales:{
+      x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',font:{size:9},maxRotation:40}},
+      y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:C.or,font:{size:10},callback:v=>v>=1e6?`R$${(v/1e6).toFixed(1)}M`:`R$${(v/1e3).toFixed(0)}K`}},
+      y2:{type:'linear',position:'right',grid:{display:false},ticks:{color:C.te,font:{size:10},callback:v=>`${(v/1e3).toFixed(1)}K`}}
+    }}
+  });
+
+  /* Cumulative GMV */
+  destroy('cum');
+  CHARTS['cum']=new Chart(document.getElementById('c-cum'),{
+    type:'line',
+    data:{labels:lbs,datasets:[{label:'Cumulative GMV',data:full.map(d=>d.cumulative_gmv),borderColor:C.te,backgroundColor:C.a(C.te,0.22),fill:true,tension:0.4,borderWidth:2.5,pointRadius:0}]},
+    options:{...base({plugins:{legend:{display:false},tooltip:base().plugins.tooltip}}),
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',font:{size:9},maxRotation:40}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',font:{size:10},callback:v=>`R$${(v/1e6).toFixed(1)}M`}}
+      }
+    }
+  });
+
+  /* MoM Growth */
+  const mom=full.filter(d=>d.gmv_mom_pct!=null&&!isNaN(d.gmv_mom_pct));
+  destroy('mom');
+  CHARTS['mom']=new Chart(document.getElementById('c-mom'),{
+    type:'bar',
+    data:{labels:mom.map(d=>mLbl(d.month)),datasets:[{
+      label:'MoM GMV %',data:mom.map(d=>d.gmv_mom_pct),
+      backgroundColor:mom.map(d=>d.gmv_mom_pct>=0?C.a(C.or,0.8):C.a(C.re,0.8)),
+      borderColor:mom.map(d=>d.gmv_mom_pct>=0?C.or:C.re),
+      borderWidth:1,borderRadius:4
+    }]},
+    options:{...base({plugins:{legend:{display:false},tooltip:base().plugins.tooltip}}),
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#8A9BB0',font:{size:9},maxRotation:45}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',callback:v=>`${v.toFixed(0)}%`}}
+      }
+    }
+  });
+
+  /* Seasonality */
+  destroy('sea');
+  CHARTS['sea']=new Chart(document.getElementById('c-sea'),{
+    type:'bar',
+    data:{labels:DATA.sea.map(d=>mLbl(d.month)),datasets:[{
+      label:'% Above Trailing Avg',data:DATA.sea.map(d=>d.pct_above_trailing_avg),
+      backgroundColor:DATA.sea.map(d=>isT(d.is_seasonal_spike)?C.a(C.go,0.85):C.a(C.te,0.65)),
+      borderColor:DATA.sea.map(d=>isT(d.is_seasonal_spike)?C.go:C.te),
+      borderWidth:1,borderRadius:4
+    }]},
+    options:{...base({plugins:{legend:{display:false},tooltip:base().plugins.tooltip}}),
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#8A9BB0',font:{size:9},maxRotation:45}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',callback:v=>`${v.toFixed(0)}%`}}
+      }
+    }
+  });
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PAGE 2 — CATEGORY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function renderCat(){
+  const cats=DATA.catS.filter(d=>d.category!=='unknown').slice(0,20);
+
+  /* Category Pareto */
+  destroy('cpar');
+  CHARTS['cpar']=new Chart(document.getElementById('c-cpar'),{
+    type:'bar',
+    data:{labels:cats.map(d=>d.category.replace(/_/g,' ')),datasets:[
+      {type:'bar',label:'Revenue (R$)',data:cats.map(d=>d.revenue),backgroundColor:C.a(C.or,0.75),borderColor:C.or,borderWidth:1,borderRadius:3,yAxisID:'y',order:2},
+      {type:'line',label:'Cumulative %',data:cats.map(d=>d.cumulative_pct_of_revenue),borderColor:C.go,backgroundColor:'transparent',borderWidth:2.5,pointRadius:3.5,pointBackgroundColor:C.go,tension:0.3,yAxisID:'y2',order:1}
+    ]},
+    options:{...base(),scales:{
+      x:{grid:{display:false},ticks:{color:'#8A9BB0',font:{size:8},maxRotation:50}},
+      y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',callback:v=>`R$${(v/1e3).toFixed(0)}K`}},
+      y2:{type:'linear',position:'right',min:0,max:100,grid:{display:false},ticks:{color:C.go,callback:v=>`${v}%`}}
+    }}
+  });
+
+  /* Category Mix (stacked area) */
+  const mixData=DATA.catM;
+  const months=[...new Set(mixData.map(d=>d.month))].sort().filter(m=>{const dt=new Date(m);return dt>=new Date('2017-01-01')&&dt<=new Date('2018-08-31');});
+  const catKeys=[...new Set(mixData.map(d=>d.category_mix))];
+  const catTot={};mixData.forEach(d=>{catTot[d.category_mix]=(catTot[d.category_mix]||0)+d.revenue;});
+  const sortedCats=catKeys.sort((a,b)=>(catTot[b]||0)-(catTot[a]||0));
+
+  const mixMap={};mixData.forEach(d=>{if(!mixMap[d.category_mix])mixMap[d.category_mix]={};mixMap[d.category_mix][d.month]=d.revenue;});
+
+  const mixDS=sortedCats.map((cat,i)=>{
+    const col=cat==='other'?'#8A9BB0':CAT_PAL[i%CAT_PAL.length];
+    return{label:cat.replace(/_/g,' '),data:months.map(m=>mixMap[cat]?.[m]||0),backgroundColor:col,borderColor:col,fill:true,tension:0.4,borderWidth:0.5};
+  });
+
+  destroy('cmix');
+  CHARTS['cmix']=new Chart(document.getElementById('c-cmix'),{
+    type:'line',data:{labels:months.map(m=>mLbl(m)),datasets:mixDS},
+    options:{...base({plugins:{legend:{position:'bottom',labels:{color:'#8A9BB0',font:{size:8.5},boxWidth:9,boxHeight:9,padding:7}},tooltip:base().plugins.tooltip}}),
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#8A9BB0',font:{size:9}}},
+        y:{stacked:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',callback:v=>`R$${(v/1e3).toFixed(0)}K`}}
+      }
+    }
+  });
+
+  /* Category Quality Scatter */
+  const qd=DATA.catS.filter(d=>d.category!=='unknown'&&d.n_items_sold>=200);
+  const qColors=qd.map(d=>{
+    if(d.avg_review_score>=4.1&&d.pct_late<=9)return C.a(C.gr,0.72);
+    if(d.avg_review_score<3.8||d.pct_late>11)return C.a(C.re,0.72);
+    return C.a(C.te,0.72);
+  });
+  const qBorders=qd.map(d=>{
+    if(d.avg_review_score>=4.1&&d.pct_late<=9)return C.gr;
+    if(d.avg_review_score<3.8||d.pct_late>11)return C.re;
+    return C.te;
+  });
+
+  destroy('cqual');
+  CHARTS['cqual']=new Chart(document.getElementById('c-cqual'),{
+    type:'bubble',
+    data:{datasets:[{
+      label:'Category',
+      data:qd.map(d=>({x:d.pct_late,y:d.avg_review_score,r:Math.min(Math.max(Math.sqrt(d.revenue/4000),4),22),cat:d.category,rev:d.revenue,pl:d.pct_late})),
+      backgroundColor:qColors,borderColor:qBorders,borderWidth:1.5
+    }]},
+    options:{...base({
+      plugins:{legend:{display:false},
+        tooltip:{...base().plugins.tooltip,callbacks:{label:ctx=>{const d=qd[ctx.dataIndex];return[d.category.replace(/_/g,' '),`Review: ${d.avg_review_score.toFixed(2)}★   Late: ${d.pct_late.toFixed(1)}%`,`Revenue: ${fmtM(d.revenue)}`];}}}
+      }
+    }),
+    scales:{
+      x:{title:{display:true,text:'Late Rate (%)',color:'#8A9BB0',font:{size:10.5}},grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',callback:v=>`${v}%`}},
+      y:{min:3.0,max:4.7,title:{display:true,text:'Avg Review Score',color:'#8A9BB0',font:{size:10.5}},grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',callback:v=>`${v}★`}}
+    }}
+  });
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PAGE 3 — GEOGRAPHY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function renderGeo(){
+  /* Build data maps */
+  const demMap={},lateMap={};
+  DATA.geoC.forEach(d=>{demMap[d.customer_state]=d.pct_of_total_gmv;lateMap[d.customer_state]=d.pct_late;});
+
+  const demVals=Object.values(demMap).filter(v=>v!=null);
+  const demScale=d3.scaleSequential().domain([0,Math.max(...demVals)]).interpolator(d3.interpolate('#1a2d45',C.or));
+  const lateScale=d3.scaleSequential().domain([0,Math.max(...Object.values(lateMap))]).interpolator(d3.interpolate(C.gr,C.re));
+
+  const demTT=(sig)=>{const d=DATA.geoC.find(x=>x.customer_state===sig);if(!d)return'';
+    return`<div class="tr"><span>% of GMV</span><span class="tv">${(+d.pct_of_total_gmv).toFixed(1)}%</span></div>
+           <div class="tr"><span>GMV</span><span class="tv">${fmtM(d.gmv)}</span></div>
+           <div class="tr"><span>Orders</span><span class="tv">${fmtN(d.n_orders)}</span></div>
+           <div class="tr"><span>AOV</span><span class="tv">R$${(+d.aov).toFixed(0)}</span></div>`;};
+
+  const lateTT=(sig)=>{const d=DATA.geoC.find(x=>x.customer_state===sig);if(!d)return'';
+    return`<div class="tr"><span>Late Rate</span><span class="tv">${(+d.pct_late).toFixed(1)}%</span></div>
+           <div class="tr"><span>Avg Delivery</span><span class="tv">${(+d.avg_actual_delivery_days).toFixed(1)} days</span></div>
+           <div class="tr"><span>Avg Review</span><span class="tv">${(+d.avg_review_score).toFixed(2)}★</span></div>
+           <div class="tr"><span>Region</span><span class="tv">${d.region}</span></div>`;};
+
+  drawMap('map-dem',demMap,sig=>demScale(demMap[sig]||0),demTT);
+  drawMap('map-late',lateMap,sig=>lateScale(lateMap[sig]||0),lateTT);
+
+  /* State bar chart */
+  const top15=[...DATA.geoC].sort((a,b)=>b.gmv-a.gmv).slice(0,15);
+  destroy('stbar');
+  CHARTS['stbar']=new Chart(document.getElementById('c-stbar'),{
+    type:'bar',
+    data:{labels:top15.map(d=>d.customer_state),datasets:[
+      {type:'bar',label:'% of GMV',data:top15.map(d=>d.pct_of_total_gmv),backgroundColor:top15.map(d=>d.pct_of_total_gmv>15?C.a(C.or,0.85):d.pct_of_total_gmv>5?C.a(C.or,0.6):C.a(C.te,0.6)),borderWidth:0,borderRadius:3,yAxisID:'y',order:2},
+      {type:'line',label:'Late Rate (%)',data:top15.map(d=>d.pct_late),borderColor:C.re,backgroundColor:'transparent',borderWidth:2,pointRadius:4,pointBackgroundColor:C.re,tension:0.3,yAxisID:'y2',order:1}
+    ]},
+    options:{...base(),scales:{
+      x:{grid:{display:false},ticks:{color:'#8A9BB0',font:{size:10}}},
+      y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',callback:v=>`${v.toFixed(1)}%`}},
+      y2:{type:'linear',position:'right',grid:{display:false},ticks:{color:C.re,callback:v=>`${v.toFixed(0)}%`}}
+    }}
+  });
+
+  /* Region Flow Heatmap */
+  renderFlow();
+}
+
+function drawMap(containerId,dataMap,colorFn,ttFn){
+  const el=document.getElementById(containerId);
+  el.innerHTML='';
+  if(!GEO){el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#4a5d74;font-size:12px;text-align:center;padding:20px">Map data failed to load.<br>All other charts still work.</div>';return;}
+  const w=el.clientWidth,h=el.clientHeight||360;
+  const svg=d3.select(el).append('svg').attr('width',w).attr('height',h);
+  const proj=d3.geoMercator().fitSize([w-10,h-10],{type:'FeatureCollection',features:GEO.features});
+  const path=d3.geoPath().projection(proj);
+  const tt=document.getElementById('mtt');
+
+  svg.selectAll('path').data(GEO.features).enter().append('path')
+    .attr('d',path)
+    .attr('fill',d=>{const s=d.properties.sigla||d.properties.abbr;return colorFn(s)||'#1a2d45';})
+    .attr('stroke','rgba(255,255,255,0.12)').attr('stroke-width',0.7)
+    .style('cursor','pointer')
+    .on('mousemove',function(ev,d){
+      const s=d.properties.sigla||d.properties.abbr;
+      document.getElementById('mts').textContent=`${d.properties.name} (${s})`;
+      document.getElementById('mtc').innerHTML=ttFn(s);
+      tt.style.left=(ev.clientX+14)+'px';tt.style.top=(ev.clientY-12)+'px';
+      tt.classList.add('on');
+      d3.select(this).attr('stroke',C.or).attr('stroke-width',2);
+    })
+    .on('mouseleave',function(){
+      tt.classList.remove('on');
+      d3.select(this).attr('stroke','rgba(255,255,255,0.12)').attr('stroke-width',0.7);
+    });
+
+  svg.selectAll('text').data(GEO.features).enter().append('text')
+    .attr('transform',d=>{const c=path.centroid(d);return`translate(${c[0]},${c[1]})`})
+    .attr('text-anchor','middle').attr('dy','0.35em')
+    .attr('font-size','7.5px').attr('font-family','Inter,sans-serif')
+    .attr('fill','rgba(255,255,255,0.55)').attr('pointer-events','none')
+    .text(d=>d.properties.sigla||d.properties.abbr||'');
+}
+
+function renderFlow(){
+  const regs=['North','Northeast','Central-West','Southeast','South'];
+  const mx={};
+  DATA.flow.forEach(d=>{
+    if(!mx[d.customer_region])mx[d.customer_region]={};
+    mx[d.customer_region][d.seller_region]={n:d.n_orders,pl:d.pct_late};
+  });
+  const maxN=Math.max(...DATA.flow.map(d=>d.n_orders));
+  const short={'North':'N','Northeast':'NE','Central-West':'CW','Southeast':'SE','South':'S'};
+
+  let h=`<div class="hmg" style="grid-template-columns:56px repeat(5,1fr);padding:4px">`;
+  h+=`<div class="hmc" style="font-size:9px;color:#4a5d74;align-items:flex-end;padding-bottom:4px">BUYER↓ / SELLER→</div>`;
+  regs.forEach(r=>h+=`<div class="hmc" style="font-size:9.5px;color:#8A9BB0;font-weight:700">${short[r]}</div>`);
+  regs.forEach(cr=>{
+    h+=`<div class="hmc" style="font-size:9.5px;color:#cdd9e5;font-weight:700;background:rgba(255,255,255,0.03);border-radius:4px;padding:0 4px">${short[cr]}</div>`;
+    regs.forEach(sr=>{
+      const cell=mx[cr]?.[sr];const val=cell?.n||0;const pl=cell?.pl||0;
+      const alpha=val/maxN;
+      const self=cr===sr;
+      const bg=self?`rgba(27,127,142,${0.15+alpha*0.75})`:`rgba(27,127,142,${0.05+alpha*0.65})`;
+      const border=self?'1px solid rgba(27,127,142,0.5)':'1px solid rgba(255,255,255,0.04)';
+      h+=`<div class="hmc" style="flex-direction:column;background:${bg};border:${border};height:50px" title="${cr} → ${sr}: ${fmtN(val)} orders | ${pl.toFixed(1)}% late">
+            <span style="font-size:10.5px;font-weight:700;color:#fff">${val>500?(val/1e3).toFixed(1)+'K':val||'–'}</span>
+            ${val>0?`<span style="font-size:8.5px;color:${pl>12?C.re:'#8A9BB0'}">${pl.toFixed(0)}% late</span>`:''}
+          </div>`;
+    });
+  });
+  h+='</div><div style="font-size:10px;color:#4a5d74;padding:2px 8px 4px">Rows = buyer region · Cols = seller region · Value = orders · % = late rate</div>';
+  document.getElementById('flow-matrix').innerHTML=h;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PAGE 4 — FULFILLMENT OPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function renderOps(){
+  const bkts=DATA.del;
+  const bkLbls=['Early (2+ days)', 'On-time (0-1d)', 'Late 1-3 days', 'Late 4-7 days', 'Late 8+ days'];
+  const bkCols=[C.gr,C.te,C.go,C.or,C.re];
+
+  /* Satisfaction Cliff */
+  destroy('cliff');
+  CHARTS['cliff']=new Chart(document.getElementById('c-cliff'),{
+    type:'bar',
+    data:{labels:bkLbls,datasets:[{
+      label:'Avg Review Score',data:bkts.map(d=>d.avg_review_score),
+      backgroundColor:bkCols.map(c=>C.a(c,0.8)),borderColor:bkCols,borderWidth:2.5,borderRadius:6
+    }]},
+    options:{...base({plugins:{legend:{display:false},tooltip:{...base().plugins.tooltip,callbacks:{label:ctx=>{const d=bkts[ctx.dataIndex];return[`Avg Review: ${(+d.avg_review_score).toFixed(2)}★`,`Orders: ${fmtN(d.n_orders)}`,`1★ Rate: ${(+d.pct_1star).toFixed(1)}%`];}}}}}),
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#8A9BB0',font:{size:9},maxRotation:20}},
+        y:{min:1.5,max:4.6,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',callback:v=>`${v.toFixed(1)}★`}}
+      }
+    }
+  });
+
+  /* 1-Star Rate */
+  destroy('1star');
+  CHARTS['1star']=new Chart(document.getElementById('c-1star'),{
+    type:'bar',
+    data:{labels:bkLbls,datasets:[{
+      label:'1-Star Rate (%)',data:bkts.map(d=>d.pct_1star),
+      backgroundColor:bkCols.map(c=>C.a(c,0.8)),borderColor:bkCols,borderWidth:2.5,borderRadius:6
+    }]},
+    options:{...base({plugins:{legend:{display:false},tooltip:{...base().plugins.tooltip,callbacks:{label:ctx=>{const d=bkts[ctx.dataIndex];return[`1★ Rate: ${(+d.pct_1star).toFixed(1)}%`,`5★ Rate: ${(+d.pct_5star).toFixed(1)}%`];}}}}}),
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#8A9BB0',font:{size:9},maxRotation:20}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',callback:v=>`${v.toFixed(0)}%`}}
+      }
+    }
+  });
+
+  /* Cycle Time */
+  const stgs=DATA.cyc;
+  const stgLbs=['Approval (hrs)','Carrier Handoff (days)','Transit (days)','End-to-End (days)'];
+  destroy('cyc');
+  CHARTS['cyc']=new Chart(document.getElementById('c-cyc'),{
+    type:'bar',
+    data:{labels:stgLbs,datasets:[
+      {label:'Average',data:stgs.map(d=>d.avg_value),backgroundColor:C.a(C.te,0.8),borderColor:C.te,borderWidth:1,borderRadius:4},
+      {label:'P90',data:stgs.map(d=>d.p90_value),backgroundColor:C.a(C.re,0.6),borderColor:C.re,borderWidth:1,borderRadius:4}
+    ]},
+    options:{...base(),scales:{
+      x:{grid:{display:false},ticks:{color:'#8A9BB0',font:{size:9},maxRotation:20}},
+      y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0'}}
+    }}
+  });
+
+  /* Weekly Anomaly */
+  const wk=DATA.wkly;
+  destroy('anom');
+  CHARTS['anom']=new Chart(document.getElementById('c-anom'),{
+    type:'bar',
+    data:{labels:wk.map(d=>{const dt=new Date(d.week);return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});}),
+      datasets:[{
+        label:'Late Rate (%)',data:wk.map(d=>d.pct_late),
+        backgroundColor:wk.map(d=>d.pct_late>15?C.a(C.re,0.85):C.a(C.te,0.65)),
+        borderColor:wk.map(d=>d.pct_late>15?C.re:C.te),borderWidth:1,borderRadius:4
+      },{
+        type:'line',label:'Baseline 8.1%',data:Array(wk.length).fill(8.11),
+        borderColor:'rgba(138,155,176,0.5)',backgroundColor:'transparent',borderDash:[6,3],borderWidth:1.5,pointRadius:0
+      }]
+    },
+    options:{...base({plugins:{legend:{labels:{color:'#8A9BB0',font:{size:10},boxWidth:10,padding:10}},tooltip:base().plugins.tooltip}}),
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#8A9BB0',font:{size:9},maxRotation:45}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',callback:v=>`${v.toFixed(0)}%`}}
+      }
+    }
+  });
+
+  /* State OTD Normal vs Spike */
+  const so=DATA.sotd;
+  const normMap={},spikeMap={};
+  so.forEach(d=>{if(d.period.includes('Normal'))normMap[d.customer_state]=d.pct_late;else spikeMap[d.customer_state]=d.pct_late;});
+  const allSt=[...new Set(so.map(d=>d.customer_state))].sort((a,b)=>(spikeMap[b]||0)-(spikeMap[a]||0));
+
+  destroy('sotd');
+  CHARTS['sotd']=new Chart(document.getElementById('c-sotd'),{
+    type:'bar',
+    data:{labels:allSt,datasets:[
+      {label:'Normal (Sep–Dec 2017)',data:allSt.map(s=>normMap[s]||0),backgroundColor:C.a(C.te,0.7),borderColor:C.te,borderWidth:1,borderRadius:3},
+      {label:'Spike (Feb–Mar 2018)',data:allSt.map(s=>spikeMap[s]||0),backgroundColor:C.a(C.re,0.7),borderColor:C.re,borderWidth:1,borderRadius:3}
+    ]},
+    options:{...base(),scales:{
+      x:{grid:{display:false},ticks:{color:'#8A9BB0',font:{size:9}}},
+      y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',callback:v=>`${v.toFixed(0)}%`}}
+    }}
+  });
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PAGE 5 — SEGMENTATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const SEG_COLS={'Core High-Value':C.te,'Budget Satisfied':C.gr,'At-Risk: Late & Unhappy':C.re,'Loyal Repeat Customers':C.go};
+
+function renderSeg(){
+  /* Segment cards */
+  document.getElementById('seg-cards').innerHTML=DATA.segP.map(d=>{
+    const col=SEG_COLS[d.segment]||C.gy;
+    const isAR=d.segment.includes('At-Risk');const isLR=d.segment.includes('Loyal');
+    return`<div class="seg-card" style="border-top:3px solid ${col}">
+      <div class="seg-name" style="color:${col}">${d.segment}</div>
+      <div class="seg-val" style="color:${col}">${(+d.pct_customers).toFixed(1)}%</div>
+      <div class="seg-lbl">of customers</div>
+      <div class="seg-stat" style="color:${col}">${(+d.pct_revenue).toFixed(1)}% of revenue</div>
+      <div class="seg-stat" style="margin-top:6px;font-size:11px">
+        ${isAR?`<span style="color:${C.re}">${(+d.pct_late).toFixed(0)}% late · ${(+d.avg_review_score).toFixed(2)}★</span>`
+              :isLR?`<span style="color:${C.go}">${(+d.pct_repeat).toFixed(0)}% repeat rate</span>`
+              :`R$${(+d.monetary).toFixed(0)} avg spend`}
+      </div>
+    </div>`;
+  }).join('');
+
+  /* RFM Segments bar */
+  const rfmCols={'Champions (recent + high spend)':C.go,'High-Value Lapsed (win-back priority)':C.or,'Mid-Value':C.te,'New/Recent Low-Spend':C.gr,'Low-Value Lapsed':C.gy};
+  destroy('rfm');
+  CHARTS['rfm']=new Chart(document.getElementById('c-rfm'),{
+    type:'bar',
+    data:{labels:DATA.rfm.map(d=>d.rfm_segment),datasets:[{
+      label:'% of Revenue',data:DATA.rfm.map(d=>d.pct_revenue),
+      backgroundColor:DATA.rfm.map(d=>C.a(rfmCols[d.rfm_segment]||C.gy,0.75)),
+      borderColor:DATA.rfm.map(d=>rfmCols[d.rfm_segment]||C.gy),borderWidth:2,borderRadius:5
+    }]},
+    options:{...base({indexAxis:'y',plugins:{legend:{display:false},tooltip:{...base().plugins.tooltip,callbacks:{label:ctx=>{const d=DATA.rfm[ctx.dataIndex];return[`Revenue: ${(+d.pct_revenue).toFixed(1)}%`,`Customers: ${fmtN(d.n_customers)} (${(+d.pct_customers).toFixed(1)}%)`,`Avg Spend: R$${(+d.avg_monetary).toFixed(0)}`,`Avg Recency: ${(+d.avg_recency_days).toFixed(0)} days`];}}}}}),
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',callback:v=>`${v.toFixed(0)}%`}},
+        y:{grid:{display:false},ticks:{color:'#cdd9e5',font:{size:10.5}}}
+      }
+    }
+  });
+
+  /* Behavioral segment profile */
+  const segKeys=DATA.segP.map(d=>d.segment.split(':')[0].trim());
+  const segCols2=DATA.segP.map(d=>SEG_COLS[d.segment]||C.gy);
+  destroy('bseg');
+  CHARTS['bseg']=new Chart(document.getElementById('c-bseg'),{
+    type:'bar',
+    data:{labels:segKeys,datasets:[
+      {label:'% Customers',data:DATA.segP.map(d=>d.pct_customers),backgroundColor:segCols2.map(c=>C.a(c,0.45)),borderColor:segCols2,borderWidth:2,borderRadius:4},
+      {label:'% Revenue',data:DATA.segP.map(d=>d.pct_revenue),backgroundColor:segCols2.map(c=>C.a(c,0.75)),borderColor:segCols2,borderWidth:2,borderRadius:4}
+    ]},
+    options:{...base(),scales:{
+      x:{grid:{display:false},ticks:{color:'#8A9BB0',font:{size:9},maxRotation:15}},
+      y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',callback:v=>`${v.toFixed(0)}%`}}
+    }}
+  });
+
+  /* RFM Table */
+  document.getElementById('rfm-tbl').innerHTML=`
+    <table class="dt">
+      <thead><tr><th>Segment</th><th>Customers</th><th>% Base</th><th>Avg Spend</th><th>Avg Recency</th><th>% Revenue</th><th>% Repeat</th></tr></thead>
+      <tbody>${DATA.rfm.map(d=>`
+        <tr>
+          <td style="font-weight:700;color:${rfmCols[d.rfm_segment]||C.gy}">${d.rfm_segment}</td>
+          <td>${fmtN(d.n_customers)}</td>
+          <td>${(+d.pct_customers).toFixed(1)}%</td>
+          <td>R$${(+d.avg_monetary).toFixed(0)}</td>
+          <td>${(+d.avg_recency_days).toFixed(0)} days</td>
+          <td><strong>${(+d.pct_revenue).toFixed(1)}%</strong></td>
+          <td>${(+d.pct_repeat).toFixed(1)}%</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PAGE 6 — SELLERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function renderSell(){
+  /* Pareto */
+  destroy('spar');
+  CHARTS['spar']=new Chart(document.getElementById('c-spar'),{
+    type:'bar',
+    data:{labels:DATA.sprt.map(d=>`Decile ${d.revenue_decile}`),datasets:[
+      {type:'bar',label:'Decile Revenue',data:DATA.sprt.map(d=>d.decile_revenue),backgroundColor:DATA.sprt.map((_,i)=>i===0?C.a(C.or,0.88):C.a(C.te,0.62)),borderColor:DATA.sprt.map((_,i)=>i===0?C.or:C.te),borderWidth:1,borderRadius:4,yAxisID:'y',order:2},
+      {type:'line',label:'Cumulative %',data:DATA.sprt.map(d=>d.cumulative_pct_of_revenue),borderColor:C.go,backgroundColor:'transparent',borderWidth:2.5,pointRadius:4.5,pointBackgroundColor:C.go,tension:0.3,yAxisID:'y2',order:1}
+    ]},
+    options:{...base(),scales:{
+      x:{grid:{display:false},ticks:{color:'#8A9BB0',font:{size:10}}},
+      y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',callback:v=>fmtM(v)}},
+      y2:{type:'linear',position:'right',min:0,max:100,grid:{display:false},ticks:{color:C.go,callback:v=>`${v}%`}}
+    }}
+  });
+
+  /* Scorecard table */
+  const top20=DATA.scard.slice(0,20);
+  document.getElementById('sell-tbl').innerHTML=`
+    <table class="dt">
+      <thead><tr><th>#</th><th>State</th><th>Orders</th><th>Revenue</th><th>Rev / Order</th><th>Avg Review</th><th>Late Rate</th><th>% Late</th></tr></thead>
+      <tbody>${top20.map(d=>{
+        const rev=+(d.avg_review_score||0);const pl=+(d.pct_late||0);
+        const rp=rev<3.8?'p-re':rev>=4.2?'p-gr':'p-go';
+        const lp=pl>15?'p-re':pl<6?'p-gr':'p-go';
+        return`<tr>
+          <td><strong>${d.revenue_rank}</strong></td>
+          <td>${d.seller_state}</td>
+          <td>${fmtN(d.n_orders)}</td>
+          <td>${fmtM(d.revenue)}</td>
+          <td>R$${(+d.avg_revenue_per_order).toFixed(0)}</td>
+          <td><span class="pill ${rp}">${rev?rev.toFixed(2)+'★':'N/A'}</span></td>
+          <td><span class="pill ${lp}">${pl?pl.toFixed(1)+'%':'N/A'}</span></td>
+          <td>${fmtN(d.n_late||0)}</td>
+        </tr>`;}).join('')}
+      </tbody>
+    </table>`;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PAGE 7 — PREDICTIVE RISK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function renderRisk(){
+  /* Pre-computed decile lift tables from NB6 validation */
+  const liftCols=['#D94F3D','#df5e2e','#E8620A','#f07937','#F4C842','#b8d45a','#7bc67a','#57b861','#44a854','#4CAF50'];
+  const decileLbls=['D1 ▲','D2','D3','D4','D5','D6','D7','D8','D9','D10 ▼'];
+
+  /* Model A: late delivery */
+  const mA=[26.10,16.80,12.40,10.10,8.50,6.90,5.40,3.90,2.70,1.24];
+  const bA=8.19;
+  destroy('la');
+  CHARTS['la']=new Chart(document.getElementById('c-la'),{
+    type:'bar',
+    data:{labels:decileLbls,datasets:[
+      {type:'bar',label:'Late Rate (%)',data:mA,backgroundColor:liftCols.map(c=>C.a(c,0.8)),borderColor:liftCols,borderWidth:1.5,borderRadius:4,yAxisID:'y',order:2},
+      {type:'line',label:`Baseline (${bA}%)`,data:Array(10).fill(bA),borderColor:'rgba(138,155,176,0.55)',backgroundColor:'transparent',borderDash:[6,3],borderWidth:1.5,pointRadius:0,yAxisID:'y',order:1}
+    ]},
+    options:{...base({plugins:{legend:{labels:{color:'#8A9BB0',font:{size:10},boxWidth:10}},tooltip:{...base().plugins.tooltip,callbacks:{label:ctx=>{if(ctx.datasetIndex===1)return`Baseline: ${bA}%`;const r=mA[ctx.dataIndex];return[`Late Rate: ${r}%`,`Lift: ${(r/bA).toFixed(2)}×`];}}}}}),
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#8A9BB0',font:{size:9}}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',callback:v=>`${v}%`}}
+      }
+    }
+  });
+
+  /* Model B: negative review */
+  const mB=[56.00,35.20,23.80,16.50,11.80,8.60,6.20,4.50,3.10,2.00];
+  const bB=12.81;
+  destroy('lb');
+  CHARTS['lb']=new Chart(document.getElementById('c-lb'),{
+    type:'bar',
+    data:{labels:decileLbls,datasets:[
+      {type:'bar',label:'Negative Review Rate (%)',data:mB,backgroundColor:liftCols.map(c=>C.a(c,0.8)),borderColor:liftCols,borderWidth:1.5,borderRadius:4,yAxisID:'y',order:2},
+      {type:'line',label:`Baseline (${bB}%)`,data:Array(10).fill(bB),borderColor:'rgba(138,155,176,0.55)',backgroundColor:'transparent',borderDash:[6,3],borderWidth:1.5,pointRadius:0,yAxisID:'y',order:1}
+    ]},
+    options:{...base({plugins:{legend:{labels:{color:'#8A9BB0',font:{size:10},boxWidth:10}},tooltip:{...base().plugins.tooltip,callbacks:{label:ctx=>{if(ctx.datasetIndex===1)return`Baseline: ${bB}%`;const r=mB[ctx.dataIndex];return[`Neg Review Rate: ${r}%`,`Lift: ${(r/bB).toFixed(2)}×`];}}}}}),
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#8A9BB0',font:{size:9}}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',callback:v=>`${v}%`}}
+      }
+    }
+  });
+
+  /* Feature Importance A */
+  const fiA=[...DATA.fiA].sort((a,b)=>b.pct_of_total_importance-a.pct_of_total_importance);
+  destroy('fia');
+  CHARTS['fia']=new Chart(document.getElementById('c-fia'),{
+    type:'bar',
+    data:{labels:fiA.map(d=>d.feature.replace(/_/g,' ')),datasets:[{
+      label:'% of Importance',data:fiA.map(d=>d.pct_of_total_importance),
+      backgroundColor:fiA.map(d=>d.feature==='purchase_month'?C.a(C.go,0.8):C.a(C.te,0.72)),
+      borderColor:fiA.map(d=>d.feature==='purchase_month'?C.go:C.te),borderWidth:2,borderRadius:4
+    }]},
+    options:{...base({indexAxis:'y',plugins:{legend:{display:false},tooltip:{...base().plugins.tooltip,callbacks:{label:ctx=>`${ctx.raw.toFixed(1)}% importance`}}}}),
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',callback:v=>`${v.toFixed(0)}%`}},
+        y:{grid:{display:false},ticks:{color:'#cdd9e5',font:{size:10.5}}}
+      }
+    }
+  });
+
+  /* Feature Importance B */
+  const fiB=[...DATA.fiB].sort((a,b)=>b.pct_of_total_importance-a.pct_of_total_importance);
+  destroy('fib');
+  CHARTS['fib']=new Chart(document.getElementById('c-fib'),{
+    type:'bar',
+    data:{labels:fiB.map(d=>d.feature.replace(/_/g,' ')),datasets:[{
+      label:'% of Importance',data:fiB.map(d=>d.pct_of_total_importance),
+      backgroundColor:fiB.map(d=>['delivery_delay_days','is_late'].includes(d.feature)?C.a(C.re,0.8):C.a(C.te,0.72)),
+      borderColor:fiB.map(d=>['delivery_delay_days','is_late'].includes(d.feature)?C.re:C.te),borderWidth:2,borderRadius:4
+    }]},
+    options:{...base({indexAxis:'y',plugins:{legend:{display:false},tooltip:{...base().plugins.tooltip,callbacks:{label:ctx=>`${ctx.raw.toFixed(1)}% importance`}}}}),
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BB0',callback:v=>`${v.toFixed(0)}%`}},
+        y:{grid:{display:false},ticks:{color:'#cdd9e5',font:{size:10.5}}}
+      }
+    }
+  });
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   INIT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+async function init(){
+  Chart.defaults.color='#8A9BB0';
+  Chart.defaults.font.family="'Inter',-apple-system,sans-serif";
+
+  try{
+    await loadAll();
+    const ld=document.getElementById('ld');
+    ld.classList.add('out');
+    setTimeout(()=>ld.remove(),500);
+    renderExec();
+  }catch(err){
+    console.error(err);
+    document.getElementById('ld').innerHTML=`
+      <div style="text-align:center;padding:40px;max-width:480px">
+        <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#D94F3D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 16px;display:block"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4M12 17h.01"/></svg>
+        <div style="color:#D94F3D;font-size:16px;font-weight:700;margin-bottom:8px">Data failed to load</div>
+        <div style="color:#8A9BB0;font-size:13px;line-height:1.8">
+          This dashboard must be served from a local HTTP server (not opened as a file).<br><br>
+          Run in your terminal:
+        </div>
+        <code style="display:block;background:#112240;padding:12px 16px;border-radius:8px;font-size:12px;margin:14px 0;text-align:left;color:#cdd9e5;line-height:1.8">
+          cd "/Users/akhileshvangala/Desktop/DA & BA/projects/01-ecommerce-retail-fulfillment-analytics"<br>
+          python3 -m http.server 8080
+        </code>
+        <div style="color:#8A9BB0;font-size:13px">
+          Then open: <a href="http://localhost:8080/dashboard/" style="color:#E8620A">http://localhost:8080/dashboard/</a>
+        </div>
+      </div>`;
+  }
+}
+
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+stage,n,avg_value,median_value,p90_value,unit,stage_order
+approval_hours (purchase -> approved),99281,10.42,0.34,34.66,hours,1
+carrier_handoff_days (approved -> carrier),96299,2.86,1.85,6.03,days,2
+shipping_transit_days (carrier -> customer),96452,9.33,7.1,18.9,days,3
+"actual_delivery_days (purchase -> customer, end-to-end)",96470,12.56,10.22,23.1,days,4

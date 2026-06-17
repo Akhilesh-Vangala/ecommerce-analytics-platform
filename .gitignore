@@ -8,10 +8,20 @@ __pycache__/
 data/raw/*.csv
 data/processed/*.csv
 
-# Dashboard extracts are generated via etl/export_dashboard_extracts.py, not committed
-dashboard/extracts/*.csv
+# Dashboard extracts ARE committed (dashboard/extracts/*.csv) so the static
+# GitHub Pages site works with no build step. Regenerate via
+# etl/export_dashboard_extracts.py if the underlying data changes.
 
 .DS_Store
+hyperd.log
 
 # Personal working notes and generator scripts, not part of the published project
 local_reference/
+
+# Drill-through detail extracts generated for future deep-dive views but not
+# yet wired into dashboard/index.html (too large for the static repo: ~110MB)
+dashboard/extracts/orders_detail.csv
+dashboard/extracts/order_items_detail.csv
+dashboard/extracts/customer_segments.csv
+dashboard/extracts/risk_scores_late_delivery.csv
+dashboard/extracts/risk_scores_negative_review.csv

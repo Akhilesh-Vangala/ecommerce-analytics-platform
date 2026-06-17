@@ -2,10 +2,12 @@
 
 **An Amazon Retail / Marketplace / Fulfillment-Ops analog, built on the Olist Brazilian E-Commerce dataset.**
 
+### [Live interactive dashboard →](https://Akhilesh-Vangala.github.io/ecommerce-analytics-platform/)
+
 A production-style analytics project: a layered SQL warehouse (raw → staging → star-schema
 marts) with an automated data-quality framework, a 27-query SQL catalog across four business
 domains, six narrated Python notebooks (EDA → time series → geospatial → hypothesis testing →
-segmentation → predictive risk modeling), and a 7-page Tableau dashboard built from 24
+segmentation → predictive risk modeling), and a 7-page interactive web dashboard built from 19
 reproducible extracts.
 
 > **Why Olist, framed as Amazon?** Olist is a multi-seller marketplace where customers order
@@ -57,10 +59,10 @@ data/raw/*.csv (Kaggle)
         |
         +--> notebooks/0{1-6}_*.ipynb  -- EDA, stats, segmentation, ML
         |
-        +--> dashboard/extracts/*.csv  -- 24 extracts
+        +--> dashboard/extracts/*.csv  -- 19 extracts
                   |
                   v
-            Tableau Public  -- 7-page interactive dashboard
+            dashboard/index.html  -- 7-page interactive web dashboard (GitHub Pages)
 ```
 
 Every SQL file is written in ANSI/Redshift-compatible SQL, with `DISTKEY`/`SORTKEY` choices
@@ -85,7 +87,7 @@ PostgreSQL 16, but the schema is designed to map directly onto a real Redshift c
 │   ├── data_quality/             # 39-check DQ suite
 │   └── analytics/                  # 27-query SQL catalog, 4 business domains
 ├── notebooks/                # 6 narrated Jupyter notebooks (EDA -> ML)
-├── dashboard/extracts/        # 24 CSV extracts feeding the Tableau workbook (generated, gitignored)
+├── dashboard/                 # 7-page interactive web dashboard (index.html + extracts, served via GitHub Pages)
 └── docs/
     └── CASE_STUDY.md         # problem -> approach -> findings -> recommendations
 ```
@@ -97,7 +99,7 @@ PostgreSQL 16, but the schema is designed to map directly onto a real Redshift c
 - **Database:** PostgreSQL 16 (Redshift-compatible SQL — DISTKEY/SORTKEY choices documented in `sql/marts/`)
 - **Pipeline:** Python (psycopg2, SQLAlchemy, pandas)
 - **Analysis:** pandas, NumPy, SciPy, statsmodels, scikit-learn
-- **Visualization:** matplotlib, seaborn, Plotly (notebooks); Tableau Public (dashboard)
+- **Visualization:** matplotlib, seaborn, Plotly (notebooks); Chart.js, D3.js (interactive web dashboard)
 - **Notebooks:** Jupyter / nbconvert
 
 ---
@@ -136,7 +138,9 @@ revenue & growth, customer RFM/cohorts, fulfillment & SLA, and seller marketplac
 
 ---
 
-## Dashboard (7 pages, Tableau Public)
+## Dashboard (7 pages, interactive web app)
+
+**[Live demo →](https://Akhilesh-Vangala.github.io/ecommerce-analytics-platform/)**
 
 1. Executive Overview
 2. Sales & Category Performance
@@ -146,7 +150,16 @@ revenue & growth, customer RFM/cohorts, fulfillment & SLA, and seller marketplac
 6. Seller Marketplace
 7. Predictive Risk Scoring
 
-Built from 24 CSVs generated locally by `etl/export_dashboard_extracts.py` (step 6 above).
+Built with vanilla JavaScript, Chart.js, and D3.js from 19 CSV extracts generated locally by
+`etl/export_dashboard_extracts.py` (step 6 above) — no build step, deployed straight to GitHub
+Pages from `dashboard/` on every push to `main` (see `.github/workflows/pages.yml`).
+
+To run it locally:
+
+```bash
+cd dashboard && python3 -m http.server 8080
+# then open http://localhost:8080
+```
 
 ---
 

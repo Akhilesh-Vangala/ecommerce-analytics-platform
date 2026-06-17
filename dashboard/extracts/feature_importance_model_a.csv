@@ -1,0 +1,12 @@
+feature,importance,rank,pct_of_total_importance,model
+purchase_month,0.526181407047711,1,52.6181407047711,Late Delivery Risk (Model A)
+estimated_delivery_days,0.1971493758942842,2,19.71493758942842,Late Delivery Risk (Model A)
+distance_km,0.13153473880342326,3,13.153473880342325,Late Delivery Risk (Model A)
+category_grp,0.03686902654960093,4,3.686902654960093,Late Delivery Risk (Model A)
+order_total_value,0.034745642460253745,5,3.4745642460253743,Late Delivery Risk (Model A)
+freight_ratio,0.026034865583261596,6,2.6034865583261597,Late Delivery Risk (Model A)
+purchase_dow,0.014730990601071678,7,1.4730990601071678,Late Delivery Risk (Model A)
+is_cross_region,0.011682759017845592,8,1.1682759017845592,Late Delivery Risk (Model A)
+max_installments,0.009142561372021374,9,0.9142561372021374,Late Delivery Risk (Model A)
+primary_payment_type,0.007266790022310233,10,0.7266790022310233,Late Delivery Risk (Model A)
+n_items,0.00466184264821637,11,0.466184264821637,Late Delivery Risk (Model A)
